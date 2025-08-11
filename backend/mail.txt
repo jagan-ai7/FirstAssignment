@@ -1,0 +1,114 @@
+testdum082@gmail.com
+testdumm441@gmail.com
+testfun736@gmail.com
+Test123#@!
+
+
+
+🔐 Forgot Password Flow in MERN Stack
+1. User Requests Password Reset (Frontend - React)
+User submits their email on a "Forgot Password" page.
+
+jsx
+Copy
+Edit
+// React (simplified example)
+const handleForgotPassword = async () => {
+  const response = await fetch('/api/auth/forgot-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  const data = await response.json();
+  alert(data.message);
+};
+2. Backend Receives Request (Node.js + Express)
+Check if the user exists. If yes, generate a reset token and send an email with a reset link.
+
+js
+Copy
+Edit
+// authController.js
+const crypto = require('crypto');
+const User = require('../models/User');
+const sendEmail = require('../utils/sendEmail');
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  const token = crypto.randomBytes(32).toString('hex');
+  user.resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 mins
+  await user.save();
+
+  const resetUrl = `http://localhost:3000/reset-password/${token}`;
+  await sendEmail(user.email, 'Password Reset', `Reset here: ${resetUrl}`);
+
+  res.json({ message: 'Password reset link sent to email' });
+};
+3. Email Contains Reset Link (With Token)
+Example:
+http://localhost:3000/reset-password/abcdef123456
+
+4. User Opens Reset Link (Frontend - React)
+Render a form to input a new password.
+
+jsx
+Copy
+Edit
+const handleReset = async () => {
+  const response = await fetch(`/api/auth/reset-password/${token}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  const data = await response.json();
+  alert(data.message);
+};
+5. Backend Verifies Token and Updates Password
+js
+Copy
+Edit
+// resetPassword route
+exports.resetPassword = async (req, res) => {
+  const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) return res.status(400).json({ message: 'Token is invalid or expired' });
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  await user.save();
+
+  res.json({ message: 'Password reset successful' });
+};
+✅ MongoDB Schema Snippet
+js
+Copy
+Edit
+// User.js
+const userSchema = new mongoose.Schema({
+  email: String,
+  password: String,
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
+});
+📧 Email Utility
+You can use nodemailer or a service like SendGrid.
+
+js
+Copy
+Edit
+const nodemailer = require('nodemailer');
+
+const sendEmail = async (to, subject, text) => {
+  const transporter = nodemailer.createTransport({ /* config */ });
+  await transporter.sendMail({ to, subject, text });
+};

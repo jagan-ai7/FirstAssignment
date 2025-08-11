@@ -1,0 +1,115 @@
+🧩 Steps to Use multiselect-react-dropdown
+1. 📦 Install in React
+bash
+Copy
+Edit
+npm install multiselect-react-dropdown
+2. 🟢 React Functional Component — Home Page
+🔹 /src/pages/Home.jsx
+jsx
+Copy
+Edit
+import React, { useEffect, useState } from 'react';
+import { Multiselect } from 'multiselect-react-dropdown';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
+const Home = () => {
+  const [options, setOptions] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  // Example: get user from token/localStorage or backend
+  useEffect(() => {
+    const fetchUserAndSkills = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const resUser = await axios.get('/api/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUser(resUser.data);
+
+        const resSkills = await axios.get('/api/skills', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const formatted = resSkills.data.map(skill => ({
+          id: skill.id,
+          name: skill.name
+        }));
+
+        setOptions(formatted);
+      } catch (err) {
+        console.error('Auth failed or no skills:', err);
+        navigate('/login');
+      }
+    };
+
+    fetchUserAndSkills();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const skillIds = selected.map(s => s.id);
+
+      await axios.post('/api/user-skills', {
+        userId: user.id,
+        skillIds
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      alert('Skills saved successfully!');
+    } catch (err) {
+      console.error('Failed to save skills', err);
+    }
+  };
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      {user && <h2>Welcome, {user.username}</h2>}
+
+      <Multiselect
+        options={options}
+        selectedValues={selected}
+        onSelect={setSelected}
+        onRemove={setSelected}
+        displayValue="name"
+        placeholder="Select your skills"
+      />
+
+      <button onClick={handleSave} style={{ marginTop: '1rem' }}>Save</button>
+    </div>
+  );
+};
+
+export default Home;
+3. 🔵 Backend API Routes
+/api/skills (GET)
+Returns available skills:
+
+js
+Copy
+Edit
+app.get('/api/skills', async (req, res) => {
+  const skills = await Skill.findAll();
+  res.json(skills);
+});
+/api/user-skills (POST)
+Saves selected skills for the user:
+
+js
+Copy
+Edit
+app.post('/api/user-skills', async (req, res) => {
+  const { userId, skillIds } = req.body;
+
+  const user = await User.findByPk(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  await user.setSkills(skillIds); // Many-to-many relationship
+  res.json({ message: 'Skills saved successfully' });
+});

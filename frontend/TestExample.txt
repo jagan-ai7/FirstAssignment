@@ -1,0 +1,83 @@
+// frontend/src/App.js
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+function App() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    axios.get('http://localhost:3001/users')
+      .then(res => setUsers(res.data))
+      .catch(err => console.error('Error:', err));
+  }, []);
+
+  const addUser = () => {
+    axios.post('http://localhost:3001/users', {
+      firstname: 'Jane',
+      lastname: 'Smith',
+      email: 'jane@example.com',
+      password: 'mypassword123'
+    })
+    .then(res => {
+      console.log('User added:', res.data);
+      // Refresh user list after adding
+      setUsers(prev => [...prev, res.data]);
+    })
+    .catch(err => console.error('Error:', err));
+  };
+
+  return (
+    <div>
+      <h1>User List</h1>
+      <button onClick={addUser}>Add User</button>
+      <ul>
+        {users.map(u => (
+          <li key={u.id}>{u.firstname} {u.lastname} ({u.email})</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default App;
+
+
+
+
+const bcrypt = require('bcrypt');
+const User = require('../models/User'); // Your Sequelize User model
+
+async function login(email, plainPassword) {
+  // Find user by email
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    // User not found
+    return { success: false, message: 'Invalid email or password' };
+  }
+
+  // Compare entered password with stored hashed password
+  const isMatch = await bcrypt.compare(plainPassword, user.password);
+  if (!isMatch) {
+    // Password does not match
+    return { success: false, message: 'Invalid email or password' };
+  }
+
+  // Credentials are valid
+  return { success: true, user };
+}
+
+
+
+
+
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const result = await login(email, password);
+
+  if (!result.success) {
+    return res.status(401).json({ error: result.message });
+  }
+
+  res.json({ message: 'Login successful', user: result.user });
+});

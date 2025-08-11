@@ -1,0 +1,36 @@
+.side-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 30%;
+    padding: 10px;
+    border: 1px solid black;
+    border-radius: 5px;
+}
+
+/* .search-user .searchBox {
+    padding: 5px;
+}
+ */
+
+ .user-container {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid black;
+    border-radius: 5px;
+    align-items: flex-start;
+    margin-top: 10px;
+    background-color: #d1ffd6;
+ }
+
+ .user-name {
+    font-family: "Times New Roman", Times, serif;
+    font-weight: bold;
+    margin: 5px;
+    font-size: 20px;
+ }
+
+ .user-email {
+    margin: 5px;
+    font-size: 15px;
+ }

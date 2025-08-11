@@ -1,0 +1,33 @@
+.message-container {
+    display: flex;
+    flex-direction: column;
+    width: 450px;
+    margin: 20px;
+    padding: 10px;
+}
+
+.inputContent {
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 15px;
+    height: 70px;
+}
+
+.message-button {
+    margin: 20px 10px;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 15px;
+    background-color: #2B3445;
+    color: white;
+    cursor: pointer;
+}
+
+.message-button:hover {
+    background-color: #484C5F;
+}
+
+.message-button:active {
+    transform: scale(0.98);
+}

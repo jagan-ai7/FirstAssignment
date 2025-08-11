@@ -1,0 +1,62 @@
+import logo from './logo.svg';
+import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Register } from './register/Register';
+import { Login } from './login/Login';
+import { Welcome } from './welcome/Welcome';
+import { OtpVerification } from './login/OtpVerification';
+import { PrivateRoute } from './PrivateRoute';
+import { ForgotPassword } from './login/ForgotPassword';
+import { ResetPassword } from './login/ResetPassword';
+import { ChangePassword } from './welcome/ChangePassword';
+import { Homepage } from './Homepage';
+import { Message } from './message/Message';
+import { Side } from './side/Side';
+import { Chat } from './side/Chat';
+import { MessageExample } from './MessageExample';
+import { Layout } from './Layout';
+
+const App = () => {
+  return (
+    <div className="App">
+      <Router>
+        <Routes>
+          <Route path='/register' element={<Register />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/verification' element={<OtpVerification />} />
+          <Route path='/forgotpassword' element={<ForgotPassword />} />
+          <Route path='/reset-password/:id/:token' element={<ResetPassword />} />
+          <Route element={<PrivateRoute />}>
+            <Route path='/welcome' element={<Welcome />} />
+            <Route path='/side' element={<Side />} />
+            <Route path='/layout' element={<Layout />} />
+            <Route path='/changepassword' element={<ChangePassword />} />
+            <Route path='/homepage' element={<Homepage />} />
+            <Route path='/message' element={<Message />} />
+            <Route path='/chat/:id' element={<Chat />} />
+            <Route path='/messagexample' element={<MessageExample />} />
+          </Route>
+        </Routes>
+      </Router>
+
+
+      {/* <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <p>
+          Edit <code>src/App.js</code> and save to reload.
+        </p>
+        <a
+          className="App-link"
+          href="https://reactjs.org"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn React
+        </a>
+      </header> */}
+    </div >
+  );
+}
+
+export default App;

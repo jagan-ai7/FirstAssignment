@@ -1,0 +1,30 @@
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+
+export const Welcome = () => {
+    const [user, setUser] = useState('');
+    const { id } = useParams();
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/users/user/${id}`);
+        console.log('User data:', response.data);
+        const {firstName, lastName} = response.data;
+        setUser(firstName + ' ' + lastName);
+        console.log('User:', user);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+  useEffect(() => {
+    if (id) {
+      fetchUser();
+    }
+  }, [id]);
+
+    return (
+        <h2>Welcome: {user}</h2>
+    )
+}
+
+ 

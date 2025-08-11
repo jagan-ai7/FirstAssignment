@@ -1,0 +1,56 @@
+// .env
+
+SECRET="This key is secret"
+
+
+// ./routes/users.json
+
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const SECRET_KEY = process.env.SECRET;
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const result = await login(email, password);
+  console.log('result ----------', result);
+
+  if (!result.success) {
+    return res.status(401).json({
+      message: "Invalid email or password"
+    });
+  }
+  
+  const token = jwt.sign(
+    {userId: result.user.id, email: result.user.email},
+    SECRET_KEY,
+    {expiresIn: '1h'}
+  );
+  return res.status(200).json({
+    message: 'Login successful',
+    token,
+    user: {
+      id: result.user.id,
+      email: result.user.email,
+    },
+  });
+});
+
+function verifyToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if(!token) return res.status(401).json({message: 'Token missing'});
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if(err) return res.status(403).json({message: 'Invalid Token'});
+    req.user = user;
+    next();
+  })
+}
+
+router.get('/protected', verifyToken, async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
