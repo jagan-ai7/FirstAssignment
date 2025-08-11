@@ -32,7 +32,6 @@ export const Side = () => {
     }, []);
 
     const selectUser = async (id) => {
-
         navigate(`/chat/${id}`);
 
     }
