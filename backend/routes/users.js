@@ -81,27 +81,46 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
-    const otp = generateOTP();
-    const expires_at = new Date(Date.now() + 1 * 60000);
+    //--------------------------without otp------------------------
+    const token = jwt.sign(
+      { userId: result.user.id, email: result.user.email },
+      SECRET_KEY,
+      { expiresIn: '1d' }
+    );
 
-    const mail = await Otp.create({ email, otp, expires_at });
-
-    const info = await transporter.sendMail({
-      from: process.env.ADMIN_EMAIL,
-      to: email,
-      subject: "Your OTP Code",
-      text: `Your OTP is ${otp}`
-    })
-
-    console.log("Information------:", info);
-    console.log("OTP saved---------", mail);
-
-    res.status(200).json({
+    return res.status(200).json({
       statusCode: 200,
-      message: 'OTP sent to your email. Please verify to complete login.',
-      data: { email }
+      message: 'Login Successful',
+      token,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+      },
     });
+
+    //---------------------------with otp--------------------------------------
+
+    // const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+    // const otp = generateOTP();
+    // const expires_at = new Date(Date.now() + 1 * 60000);
+
+    // const mail = await Otp.create({ email, otp, expires_at });
+
+    // const info = await transporter.sendMail({
+    //   from: process.env.ADMIN_EMAIL,
+    //   to: email,
+    //   subject: "Your OTP Code",
+    //   text: `Your OTP is ${otp}`
+    // })
+
+    // console.log("Information------:", info);
+    // console.log("OTP saved---------", mail);
+
+    // res.status(200).json({
+    //   statusCode: 200,
+    //   message: 'OTP sent to your email. Please verify to complete login.',
+    //   data: { email }
+    // });
   } catch (error) {
     return res.status(500).json({ statusCode: 500, error: "Failed Login", data: '' });
   }

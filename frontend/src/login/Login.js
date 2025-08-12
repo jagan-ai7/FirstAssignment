@@ -15,12 +15,12 @@ export const Login = () => {
 
     const location = useLocation();
     useEffect(() => {
-    if (location.state?.toast) {
-      toast.success(location.state.toast);
-    } else if(location.state?.toast2) {
-        toast.success(location.state.toast2);
-    }
-  }, [location]);
+        if (location.state?.toast) {
+            toast.success(location.state.toast);
+        } else if (location.state?.toast2) {
+            toast.success(location.state.toast2);
+        }
+    }, [location]);
 
     const formik = useFormik({
         initialValues: {
@@ -34,8 +34,18 @@ export const Login = () => {
         onSubmit: async (values) => {
             setLoading(true);
             try {
-                await axios.post('http://localhost:5000/users/login', values);
-                navigate('/verification')
+                const response = await axios.post('http://localhost:5000/users/login', values);
+
+                //--------------------------------without otp----------------------------
+                const token = response.data.token;
+                const id = response.data.user.id;
+                localStorage.setItem('token', token);
+                localStorage.setItem('id', id);
+                console.log("User-----------", response);
+                navigate('/layout');
+
+                //------------------------------with otp---------------------------------
+                // navigate('/verification')
             } catch (error) {
                 if (error.response) {
                     toast.error(`Login failed : ${error.response.data.message}`);
@@ -69,7 +79,7 @@ export const Login = () => {
                 </div>
                 {formik.touched.password && formik.errors.password ? <div style={{ color: 'red', marginRight: 'auto', fontSize: "13px" }}>{formik.errors.password}</div> : null}
 
-                {loading ? <div style={{margin: '28.5px', padding: '10px'}}></div> : <button className="loginSubmit_button" onClick={formik.handleSubmit} type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>}
+                {loading ? <div style={{ margin: '28.5px', padding: '10px' }}></div> : <button className="loginSubmit_button" onClick={formik.handleSubmit} type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>}
                 <Link className="linkfp" to={"/forgotpassword"}>Forgot Password</Link>
             </form>
             <ToastContainer />
