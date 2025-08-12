@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import '../register/Register.css';
 import { Link } from "react-router-dom";
+import Popup from "reactjs-popup";
 
 export const Welcome = () => {
   const token = localStorage.getItem('token');
@@ -28,9 +29,17 @@ export const Welcome = () => {
   }, []);
 
   return (
-      <div style={{display: 'flex', backgroundColor: 'skyblue', border: '1px solid black', borderRadius: '5px'}}>
-        <h2 style={{marginLeft: '40px'}}>Welcome : {user}</h2>
+    <div style={{ display: 'flex', backgroundColor: '#032d5d', color: 'white', border: '1px solid black', borderRadius: '5px', justifyContent:"space-between" }}>
+      <h2 style={{ marginLeft: '40px', fontFamily: 'Times New Roman, Times, serif', alignSelf: 'center' }}>{user}</h2>
+      {/* <Link className="linkfp" to={"/changepassword"}>Change Password</Link> */}
+      <Popup trigger={<button className="popup-btn">Menu</button>} contentStyle={{display: 'flex', flexDirection: 'column', border: 'none', borderRadius: '5px'}} overlayStyle={{ background: 'rgba(0,0,0,0.4)' }}>
+      <span className="popup-itm">
         <Link className="linkfp" to={"/changepassword"}>Change Password</Link>
-      </div>
+        </span>
+        <span className="popup-itm">
+        <Link className="linkfp" to={"/login"} onClick={() => {localStorage.clear();}}>Logout</Link>
+        </span>
+      </Popup>
+    </div>
   )
 }

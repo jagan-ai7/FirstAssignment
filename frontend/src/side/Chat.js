@@ -1,15 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Welcome } from '../welcome/Welcome.js';
 import { Side } from './Side.js';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { io } from "socket.io-client";
+import "./Chat.css"
+import { UserContext } from '../UserContext.js';
 
 
 const socket = io('http://localhost:5000');
 
 export const Chat = () => {
-    const token = localStorage.getItem('token');
+    const { user, token } = useContext(UserContext);
     const { id } = useParams();
     const [name, setName] = useState();
     const userId = localStorage.getItem('id');
@@ -92,50 +94,53 @@ export const Chat = () => {
     const chatMessages = messages[toId] || [];
 
     return (
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', height: '100vh' }}>
             <Welcome />
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '2px', overflow: 'hidden' }}>
                 <Side />
-                <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '9', gap: '5px' }}>
-                    <div style={{ display: 'flex', border: '1px solid black', backgroundColor: '#d1ffd6', borderRadius: '5px' }}>
-                        <h2 style={{ marginLeft: '20px' }}>{name}</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '9', gap: '2px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex' }}>
+                        <h2 style={{ marginLeft: '30px', fontFamily: 'Times New Roman, Times, serif', fontSize: '20Spx' }}>{name}</h2>
                     </div>
 
-                    <div style={{ flexGrow: 9, padding: '10px', border: '1px solid black', borderRadius: '5px' }}>
-                        {chatMessages.map((msg, i) => {
-                            const isSender = msg.from === userId;
-                            return (
-                                <div
-                                    key={i}
-                                    style={{
-                                        display: 'flex',
-                                        justifyContent: isSender ? 'flex-end' : 'flex-start',
-                                        marginBottom: '8px',
-                                    }}
-                                >
+                        <div style={{ flexGrow: 9, padding: '20px', overflowY: 'auto', borderTop: '1px solid black', borderRadius: '10px', margin: '0px 10px' }}>
+                            {chatMessages.map((msg, i) => {
+                                const isSender = msg.from === userId;
+                                return (
                                     <div
+                                        key={i}
                                         style={{
-                                            backgroundColor: isSender ? '#d1ffd6' : 'skyblue',
-                                            padding: '8px 12px',
-                                            borderRadius: '12px',
-                                            maxWidth: '70%',
-                                            wordWrap: 'break-word',
                                             display: 'flex',
-                                            flexDirection: 'column',
-                                            textAlign: isSender ? 'right' : 'left',
+                                            justifyContent: isSender ? 'flex-end' : 'flex-start',
+                                            marginBottom: '8px',
                                         }}
                                     >
-                                        <strong>{isSender ? 'You' : name}</strong>
-                                        <span>{msg.message}</span>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                        <div
+                                            style={{
+                                                backgroundColor: isSender ? '#4A90E2' : '#d2d6da',  
+                                                color: isSender ? '#FFFFFF' : '#161f28', 
+                                                padding: '8px 12px',
+                                                borderRadius: isSender ? '15px 0 15px 15px' : '0 15px 15px 15px',
+                                                maxWidth: '70%',
+                                                wordWrap: 'break-word',
+                                                display: 'inline-block',  
+                                                textAlign: isSender ? 'right' : 'left',
+                                                boxSizing: 'border-box',
+                                                whiteSpace: 'pre-wrap',  
+                                                margin: '8px 0',
+                                            }}
+                                        >
+                                            <span>{msg.message}</span>
+                                        </div>
 
-                    <div style={{ display: 'flex' }}>
-                        <input type='text' onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }} style={{ width: '100%', height: '40px', fontSize: '18px', borderRadius: '5px' }} onChange={(e) => {setMessage(e.target.value);}} value={message} />
-                        <button style={{borderRadius: '5px'}} onClick={(e) => { e.preventDefault(); sendMessage(); }}>Send</button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                    <div style={{ display: 'flex', gap: '2px', marginBottom: '10px' }}>
+                        <input className='chat-input' type='text' onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }} placeholder="Type a message " onChange={(e) => { setMessage(e.target.value); }} value={message} />
+                        <button className='chat-btn' onClick={(e) => { e.preventDefault(); sendMessage(); }}><img src='/images/send-button1.png' alt='Send' style={{width: '30px', height: '25px'}} /></button>
                     </div>
                 </div>
             </div>

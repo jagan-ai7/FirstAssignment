@@ -151,9 +151,35 @@
 }
 
 .linkfp {
-    color: blue;
+    color: black;
     text-decoration: none;
     margin: auto 40px auto auto;
+}
+
+.linkfp:hover {
+    color: purple;
+}
+
+.popup-itm {
+    background-color: #E9F4FE;
+    padding: 8px;
+}
+
+.popup-btn {
+    margin-right: 50px; 
+    align-self:center; background-color: transparent; 
+    color: white;
+    border: none; 
+    font-size: 17px;
+    font-weight: bold
+}
+
+.popup-btn:hover {
+    transform: scale(1.1);
+}
+
+.popup-btn:active {
+    transform: scale(0.9);
 }
 
 .forgotchangepassword_container {

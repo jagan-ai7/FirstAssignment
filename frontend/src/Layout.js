@@ -5,9 +5,11 @@ import { Welcome } from "./welcome/Welcome"
 export const Layout = () => {
 
     return (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', height: '100vh' }}>
             <Welcome />
-            <Side />
-        </>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '2px', overflow: 'hidden' }}>
+                <Side />
+            </div>
+        </div>
     )
 }
