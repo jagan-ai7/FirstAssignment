@@ -1,214 +1,215 @@
 .main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
 }
 
 .form_container {
-    border: 1px solid black;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    width: 650px;
-    gap: 5px;
-    margin: 20px;
-    padding: 15px;
-    background-color: #FCE7E2;
-    box-shadow: 1px 1px 3px black;
+  border: 1px solid black;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 650px;
+  gap: 5px;
+  margin: 20px;
+  padding: 15px;
+  background-color: #fce7e2;
+  box-shadow: 1px 1px 3px black;
 }
 
 .inputText {
-    border: 2px solid black;
-    border-radius: 5px;
-    padding: 10px;
-    font-size: 15px;
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 15px;
 }
 
 .password_container {
-    display: flex;
-    border: 2px solid black;
-    border-radius: 5px;
-    padding: 8px;
-    font-size: 15px;
-    background-color: white;
+  display: flex;
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 15px;
+  background-color: white;
 }
 
 .password_class {
-    border: none;
-    font-size: 15px;
-    width: 100%;
+  border: none;
+  font-size: 15px;
+  width: 100%;
 }
 
 .password_class:focus {
-    outline: none;
-    width: 100%;
+  outline: none;
+  width: 100%;
 }
 
 .labelText {
-    font-size: 16px;
-    margin-right: auto;
+  font-size: 16px;
+  margin-right: auto;
 }
 
 .legendText {
-    font-family: "Times New Roman", Times, serif;
-    font-size: 40px;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 40px;
 }
 
 .submitButton {
-    margin: 20px 20px;
-    padding: 8px;
-    border-radius: 5px;
-    font-size: 15px;
-    background-color: #2B3445;
-    color: white;
-    cursor: pointer;
+  margin: 20px 20px;
+  padding: 8px;
+  border-radius: 5px;
+  font-size: 15px;
+  background-color: #2b3445;
+  color: white;
+  cursor: pointer;
 }
 
 .submitButton:hover {
-    background-color: #484C5F;
+  background-color: #484c5f;
 }
 
 .submitButton:active {
-    transform: scale(0.98);
+  transform: scale(0.98);
 }
 
 .inputText_field {
-    display: flex;
-    flex-direction: column;
-    width: 45%;
+  display: flex;
+  flex-direction: column;
+  width: 45%;
 }
 
 .input_error {
-    color: red;
-    margin-right: auto;
-    font-size: 13px;
+  color: red;
+  margin-right: auto;
+  font-size: 13px;
 }
 
 .loginForm_container {
-    border: 1px solid black;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    width: 500px;
-    gap: 5px;
-    margin: 20px;
-    padding: 15px;
-    background-color: #d6c1b2;
-    box-shadow: 1px 1px 3px black;
+  border: 1px solid black;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 500px;
+  gap: 5px;
+  margin: 20px;
+  padding: 15px;
+  background-color: #d6c1b2;
+  box-shadow: 1px 1px 3px black;
 }
 
 .loginSubmit_button {
-    margin: 20px 5px;
-    padding: 8px;
-    border-radius: 5px;
-    font-size: 15px;
-    background-color: #323235;
-    color: white;
-    cursor: pointer;
+  margin: 20px 5px;
+  padding: 8px;
+  border-radius: 5px;
+  font-size: 15px;
+  background-color: #323235;
+  color: white;
+  cursor: pointer;
 }
 
 .loginSubmit_button:hover {
-    background-color: #4b4b52;
+  background-color: #4b4b52;
 }
 
 .loginSubmit_button:active {
-    transform: scale(0.98);
+  transform: scale(0.98);
 }
 
 .show_button {
-    border: none;
-    background-image: url('/public/images/eye.png');
-    background-size: 20px 20px;
-    background-position: center;
-    background-repeat: no-repeat;
-    width: 30px;
-    height: 20px;
-    background-color: transparent;
-    cursor: pointer;
+  border: none;
+  background-image: url("/public/images/eye.png");
+  background-size: 20px 20px;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 30px;
+  height: 20px;
+  background-color: transparent;
+  cursor: pointer;
 }
 
 .hide_button {
-    border: none;
-    background-image: url('/public/images/hidden.png');
-    background-size: 20px 20px;
-    background-position: center;
-    background-repeat: no-repeat;
-    width: 30px;
-    height: 20px;
-    background-color: transparent;
-    cursor: pointer;
+  border: none;
+  background-image: url("/public/images/hidden.png");
+  background-size: 20px 20px;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 30px;
+  height: 20px;
+  background-color: transparent;
+  cursor: pointer;
 }
 
 .back_login {
-    position: absolute;
-    margin: 20px 20px 0;
-    background-color: #E3CCA3;
-    padding: 8px;
-    border: 1px solid black;
-    border-radius: 5px;
+  position: absolute;
+  margin: 20px 20px 0;
+  background-color: #e3cca3;
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 5px;
 }
 
 .linkfp {
-    color: black;
-    text-decoration: none;
-    margin: auto 40px auto auto;
+  color: black;
+  text-decoration: none;
+  margin: auto 40px auto auto;
 }
 
 .linkfp:hover {
-    color: purple;
+  color: purple;
 }
 
 .popup-itm {
-    background-color: #E9F4FE;
-    padding: 8px;
+  background-color: #e9f4fe;
+  padding: 8px;
 }
 
 .popup-btn {
-    margin-right: 50px; 
-    align-self:center; background-color: transparent; 
-    color: white;
-    border: none; 
-    font-size: 17px;
-    font-weight: bold
+  margin-right: 50px;
+  align-self: center;
+  background-color: transparent;
+  color: white;
+  border: none;
+  font-size: 17px;
+  font-weight: bold;
 }
 
 .popup-btn:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .popup-btn:active {
-    transform: scale(0.9);
+  transform: scale(0.9);
 }
 
 .forgotchangepassword_container {
-    border: 1px solid black;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    width: 500px;
-    gap: 5px;
-    margin: 20px;
-    padding: 15px;
-    background-color: #FCE7E2;
-    box-shadow: 1px 1px 3px black;
+  border: 1px solid black;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 500px;
+  gap: 5px;
+  margin: 20px;
+  padding: 15px;
+  background-color: #fce7e2;
+  box-shadow: 1px 1px 3px black;
 }
 
 .forgotchangepassword_button {
-    margin: 20px 5px;
-    padding: 8px;
-    border-radius: 5px;
-    font-size: 15px;
-    background-color: #2B3445;
-    color: white;
-    cursor: pointer;
+  margin: 20px 5px;
+  padding: 8px;
+  border-radius: 5px;
+  font-size: 15px;
+  background-color: #2b3445;
+  color: white;
+  cursor: pointer;
 }
 
 .forgotchangepassword_button:hover {
-    background-color: #484C5F;
+  background-color: #484c5f;
 }
 
 .forgotchangepassword_button:active {
-    transform: scale(0.98);
+  transform: scale(0.98);
 }

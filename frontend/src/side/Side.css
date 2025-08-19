@@ -1,48 +1,43 @@
 .side-container {
-   display: flex;
-   flex-direction: column;
-   height: 100vh;
-   width: 30%;
-   padding: 10px;
-   border: none;
-   background-color: #e9f4fe	;
-   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 30%;
+  padding: 10px;
+  border: none;
+  background-color: #e9f4fe;
+  overflow-y: auto;
 }
-
-/* .search-user .searchBox {
-    padding: 5px;
-}
- */
 
 .user-container {
-   display: flex;
-   flex-direction: column;
-   border: 1px solid black;
-   border-radius: 5px;
-   align-items: flex-start;
-   margin-top: 10px;
-   background-color: #ffffff;
-   overflow: hidden;
-   box-shadow: 1px 2px 3px black;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid black;
+  border-radius: 5px;
+  align-items: flex-start;
+  margin-top: 10px;
+  background-color: #ffffff;
+  overflow: hidden;
+  box-shadow: 1px 2px 3px black;
 }
 
 .user-container:hover {
-   border-color: #4A90E2;
+  border-color: #4a90e2;
 }
 
 .user-container:active {
-   transform: scale(0.98);
+  transform: scale(0.98);
 }
 
 .user-name {
-   font-family: "Times New Roman", Times, serif;
-   font-weight: bold;
-   margin: 5px;
-   font-size: 20px;
-   overflow: hidden;
+  font-family: "Times New Roman", Times, serif;
+  font-weight: bold;
+  margin: 5px;
+  font-size: 20px;
+  overflow: hidden;
 }
 
 .user-email {
-   margin: 5px;
-   font-size: 15px;
+  margin: 5px;
+  font-size: 15px;
 }

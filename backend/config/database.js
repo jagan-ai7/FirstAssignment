@@ -1,23 +1,21 @@
-require('dotenv').config();
-const { Sequelize } = require('sequelize');
+require("dotenv").config();
+const { Sequelize } = require("sequelize");
+const config = require("./config");
+
+const env = process.env.NODE_ENV || 'development';
+const dbConfig = config[env];
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
+  dbConfig.database,
+  dbConfig.username,
+  dbConfig.password,
   {
-    host: process.env.DB_HOST,
-    dialect: 'mysql'
+    host: dbConfig.host,
+    dialect: dbConfig.dialect,
+    pool: dbConfig.pool, 
   }
 );
 
-// Sync the database
-sequelize.sync({ alter: true }) // or { force: true } to drop and recreate tables
-  .then(() => {
-    console.log('Database synchronized successfully.');
-  })
-  .catch((error) => {
-    console.error('Error syncing the database:', error);
-  });
+
 
 module.exports = sequelize;

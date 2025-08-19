@@ -1,93 +1,83 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
-
-const socket = io('http://localhost:5000');
+const socket = io("http://localhost:5000");
 
 export const MessageExample = () => {
-    const [userId, setUserId] = useState('');
-    const [toId, setToId] = useState('');
-    const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState([]);
+  const [userId, setUserId] = useState("");
+  const [toId, setToId] = useState("");
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
 
-    const hasLoggedIn = useRef(false);
+  const hasLoggedIn = useRef(false);
 
-    useEffect(() => {
-        if (userId && !hasLoggedIn.current) {
-            socket.emit('login', userId);
-            hasLoggedIn.current = true;
-        }
-    }, [userId]);
-
-    useEffect(() => {
-        socket.on('private_message', ({ from, message }) => {
-            setMessages((msgs) => [...msgs, `${from} says: ${message}`]);
-        });
-
-        // Clean up on component unmount
-        return () => {
-            socket.off('private_message');
-        };
-    }, []);
-
-    function sendMessage() {
-        if (userId && toId && message) {
-            socket.emit('private_message', { from: userId, to: toId, message });
-            setMessages((msgs) => [...msgs, `You to ${toId}: ${message}`]);
-            setMessage('');
-        }
+  useEffect(() => {
+    if (userId && !hasLoggedIn.current) {
+      socket.emit("login", userId);
+      hasLoggedIn.current = true;
     }
+  }, [userId]);
 
-    return (
-        <div>
-            <h2>One-to-One Chat</h2>
+  useEffect(() => {
+    socket.on("private_message", ({ from, message }) => {
+      setMessages((msgs) => [...msgs, `${from} says: ${message}`]);
+    });
 
-            <input
-                type="text"
-                placeholder="Your user ID"
-                value={userId}
-                onChange={(e) => {
-                    setUserId(e.target.value.trim());
-                    hasLoggedIn.current = false; // reset login flag to re-login if changed
-                }}
-            />
+    // Clean up on component unmount
+    return () => {
+      socket.off("private_message");
+    };
+  }, []);
 
-            <input
-                type="text"
-                placeholder="Send to user ID"
-                value={toId}
-                onChange={(e) => setToId(e.target.value)}
-            />
+  function sendMessage() {
+    if (userId && toId && message) {
+      socket.emit("private_message", { from: userId, to: toId, message });
+      setMessages((msgs) => [...msgs, `You to ${toId}: ${message}`]);
+      setMessage("");
+    }
+  }
 
-            <input
-                type="text"
-                placeholder="Message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') sendMessage();
-                }}
-            />
+  return (
+    <div>
+      <h2>One-to-One Chat</h2>
 
-            <button onClick={sendMessage}>Send</button>
+      <input
+        type="text"
+        placeholder="Your user ID"
+        value={userId}
+        onChange={(e) => {
+          setUserId(e.target.value.trim());
+          hasLoggedIn.current = false; // reset login flag to re-login if changed
+        }}
+      />
 
-            <ul>
-                {messages.map((msg, i) => (
-                    <li key={i}>{msg}</li>
-                ))}
-            </ul>
-        </div>
-    )
-}
+      <input
+        type="text"
+        placeholder="Send to user ID"
+        value={toId}
+        onChange={(e) => setToId(e.target.value)}
+      />
 
+      <input
+        type="text"
+        placeholder="Message"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") sendMessage();
+        }}
+      />
 
+      <button onClick={sendMessage}>Send</button>
 
-
-
-
-
-
-
+      <ul>
+        {messages.map((msg, i) => (
+          <li key={i}>{msg}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 // export const Message = () => {
 //   const [username, setUsername] = useState('');
