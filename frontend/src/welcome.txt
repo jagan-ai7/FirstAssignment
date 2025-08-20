@@ -1,30 +1,558 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import "../register/Register.css";
+import { Link } from "react-router-dom";
+import Popup from "reactjs-popup";
+import { UserContext } from "../UserContext";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5000");
 
 export const Welcome = () => {
-    const [user, setUser] = useState('');
-    const { id } = useParams();
-    const fetchUser = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/users/user/${id}`);
-        console.log('User data:', response.data);
-        const {firstName, lastName} = response.data;
-        setUser(firstName + ' ' + lastName);
-        console.log('User:', user);
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      }
-    };
-  useEffect(() => {
-    if (id) {
-      fetchUser();
+  const { users, token } = useContext(UserContext);
+  const [user, setUser] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/users/protected",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const { firstName, lastName } = response.data.data;
+      setUser(firstName + " " + lastName);
+    } catch (error) {
+      console.error("Access denied:", error.response?.data.error);
     }
-  }, [id]);
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const addFriend = (toUserId) => {
+  if (!user?.userId) return;
+  socket.emit("send_friend_request", { fromUserId: user.userId, toUserId });
+  alert("Friend request sent!");
+};
+
+  return (
+    <>
+      {/* HEADER */}
+      <div
+        style={{
+          display: "flex",
+          backgroundColor: "#032d5d",
+          color: "white",
+          border: "1px solid black",
+          borderRadius: "0 0 10px 10px",
+          justifyContent: "space-between",
+        }}
+      >
+        <h2
+          style={{
+            marginLeft: "40px",
+            fontFamily: "Times New Roman, Times, serif",
+            alignSelf: "center",
+          }}
+        >
+          {user}
+        </h2>
+
+        {/* Add Friend Button */}
+        <div
+          style={{
+            marginLeft: "auto",
+            marginRight: "50px",
+            marginTop: "auto",
+            marginBottom: "auto",
+          }}
+        >
+          <button className="add-friend" onClick={() => setIsSidebarOpen(true)}>
+            Add Friend
+          </button>
+        </div>
+
+        {/* Menu Popup */}
+        <Popup
+          trigger={<button className="popup-btn">Menu</button>}
+          contentStyle={{
+            display: "flex",
+            flexDirection: "column",
+            border: "none",
+            borderRadius: "5px",
+          }}
+          overlayStyle={{ background: "rgba(0,0,0,0.4)" }}
+        >
+          <span className="popup-itm">
+            <Link className="linkfp" to={"/changepassword"}>
+              Change Password
+            </Link>
+          </span>
+          <span className="popup-itm">
+            <Link
+              className="linkfp"
+              to={"/login"}
+              onClick={() => {
+                localStorage.clear();
+              }}
+            >
+              Logout
+            </Link>
+          </span>
+        </Popup>
+      </div>
+
+      {/* RIGHT SIDEBAR */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          height: "100vh",
+          width: "300px",
+          backgroundColor: "#fff",
+          boxShadow: "-2px 0 5px rgba(0, 0, 0, 0.3)",
+          padding: "20px",
+          transition: "transform 0.3s ease-in-out",
+          transform: isSidebarOpen ? "translateX(0%)" : "translateX(100%)",
+          zIndex: 1000,
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            fontSize: "20px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          ✖
+        </button>
+
+        <h3>Add a Friend</h3>
+        {users.map((user, i) => (
+          <div style={{borderBottom: '1px solid black', padding: '0 5px'}}
+            key={i}
+            onClick={(e) => {
+              e.preventDefault();
+              // onSelectUser(user.id);
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'row', justifyContent:'space-between' }}>
+              <p style={{ fontWeight: "bold" }}>
+                {`${user?.firstName || ""} ${user?.lastName || ""}`.trim()}
+              </p>
+              <button style={{ height: '30px', alignSelf: 'center'}} onClick={(e) => { e.preventDefault(); addFriend();}}>Add</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* OVERLAY */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.3)",
+            zIndex: 999,
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+// export const Welcome = () => {
+//   const { token } = useContext(UserContext);
+//   // const token = localStorage.getItem('token');
+//   const [user, setUser] = useState("");
+
+//   const fetchUser = async () => {
+//     try {
+//       const response = await axios.get(
+//         "http://localhost:5000/users/protected",
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+//       const { firstName, lastName } = response.data.data;
+//       console.log(firstName);
+//       setUser(firstName + " " + lastName);
+//     } catch (error) {
+//       console.error("Access denied:", error.response?.data.error);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchUser();
+//   }, []);
+
+//   return (
+//     <div
+//       style={{
+//         display: "flex",
+//         backgroundColor: "#032d5d",
+//         color: "white",
+//         border: "1px solid black",
+//         borderRadius: "0 0 10px 10px",
+//         justifyContent: "space-between",
+//       }}
+//     >
+//       <h2
+//         style={{
+//           marginLeft: "40px",
+//           fontFamily: "Times New Roman, Times, serif",
+//           alignSelf: "center",
+//         }}
+//       >
+//         {user}
+//       </h2>
+//       {/* <Link className="linkfp" to={"/changepassword"}>Change Password</Link> */}
+//       <Popup
+//         trigger={<button className="popup-btn">Menu</button>}
+//         contentStyle={{
+//           display: "flex",
+//           flexDirection: "column",
+//           border: "none",
+//           borderRadius: "5px",
+//         }}
+//         overlayStyle={{ background: "rgba(0,0,0,0.4)" }}
+//       >
+//         <span className="popup-itm">
+//           <Link className="linkfp" to={"/changepassword"}>
+//             Change Password
+//           </Link>
+//         </span>
+//         <span className="popup-itm">
+//           <Link
+//             className="linkfp"
+//             to={"/login"}
+//             onClick={() => {
+//               localStorage.clear();
+//             }}
+//           >
+//             Logout
+//           </Link>
+//         </span>
+//       </Popup>
+//     </div>
+//   );
+// };
+
+
+
+
+//-------------------------------------------------------------------------------
+import axios from "axios";
+import { useContext, useEffect, useState } from "react";
+import "../register/Register.css";
+import { Link } from "react-router-dom";
+import Popup from "reactjs-popup";
+import { io } from "socket.io-client";
+import { UserContext } from "../UserContext";
+
+const socket = io("http://localhost:5000");
+
+export const Welcome = () => {
+  const { users, token, user } = useContext(UserContext);
+  const [userName, setUserName] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [incomingRequests, setIncomingRequests] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
+
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/users/protected",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const { firstName, lastName } = response.data.data;
+      setUserName(firstName + " " + lastName);
+    } catch (error) {
+      console.error("Access denied:", error.response?.data.error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    // Listen for incoming friend requests
+    socket.on("friend_request_received", ({ fromUserId }) => {
+      setIncomingRequests((prev) => {
+        if (prev.includes(fromUserId)) return prev; // avoid duplicates
+        return [...prev, fromUserId];
+      });
+    });
+
+    // Listen for friend request accepted notification
+    socket.on("friend_request_accepted", ({ userId }) => {
+      alert(`You are now friends with user ${userId}!`);
+      // Optional: update your UI or friend list here
+    });
+
+    // Listen for friend request denied notification
+    socket.on("friend_request_denied", ({ userId }) => {
+      alert(`User ${userId} denied your friend request.`);
+    });
+
+    return () => {
+      socket.off("friend_request_received");
+      socket.off("friend_request_accepted");
+      socket.off("friend_request_denied");
+    };
+  }, []);
+
+ const addFriend = (toUserId) => {
+  if (!user?.userId) return alert("Please login first.");
+  socket.emit("send_friend_request", { fromUserId: user.userId, toUserId });
+  setSentRequests((prev) => [...prev, toUserId]); // track it
+  alert("Friend request sent!");
+};
+
+  const acceptRequest = (fromUserId) => {
+    socket.emit("accept_friend_request", { fromUserId, toUserId: user.userId });
+    setIncomingRequests((prev) => prev.filter((id) => id !== fromUserId));
+  };
+
+  const denyRequest = (fromUserId) => {
+    socket.emit("deny_friend_request", { fromUserId, toUserId: user.userId });
+    setIncomingRequests((prev) => prev.filter((id) => id !== fromUserId));
+  };
+
+  return (
+    <>
+      {/* HEADER */}
+      <div
+        style={{
+          display: "flex",
+          backgroundColor: "#032d5d",
+          color: "white",
+          border: "1px solid black",
+          borderRadius: "0 0 10px 10px",
+          justifyContent: "space-between",
+        }}
+      >
+        <h2
+          style={{
+            marginLeft: "40px",
+            fontFamily: "Times New Roman, Times, serif",
+            alignSelf: "center",
+          }}
+        >
+          {userName}
+        </h2>
+
+        {/* Add Friend Button */}
+        <div
+          style={{
+            marginLeft: "auto",
+            marginRight: "50px",
+            marginTop: "auto",
+            marginBottom: "auto",
+          }}
+        >
+          <button className="add-friend" onClick={() => setIsSidebarOpen(true)}>
+            Add Friend
+          </button>
+        </div>
+
+        {/* Menu Popup */}
+        <Popup
+          trigger={<button className="popup-btn">Menu</button>}
+          contentStyle={{
+            display: "flex",
+            flexDirection: "column",
+            border: "none",
+            borderRadius: "5px",
+          }}
+          overlayStyle={{ background: "rgba(0,0,0,0.4)" }}
+        >
+          <span className="popup-itm">
+            <Link className="linkfp" to={"/changepassword"}>
+              Change Password
+            </Link>
+          </span>
+          <span className="popup-itm">
+            <Link
+              className="linkfp"
+              to={"/login"}
+              onClick={() => {
+                localStorage.clear();
+              }}
+            >
+              Logout
+            </Link>
+          </span>
+        </Popup>
+      </div>
+
+      {/* Incoming Friend Requests */}
+      {incomingRequests.length > 0 && (
+        <div
+          style={{
+            backgroundColor: "#eee",
+            padding: "10px",
+            margin: "10px",
+            borderRadius: "5px",
+            maxWidth: "300px",
+          }}
+        >
+          <h4>Incoming Friend Requests</h4>
+          {incomingRequests.map((reqUserId) => (
+            <div
+              key={reqUserId}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "8px",
+                borderBottom: "1px solid #ccc",
+                paddingBottom: "4px",
+              }}
+            >
+              <span>{reqUserId}</span>
+              <div>
+                <button
+                  onClick={() => acceptRequest(reqUserId)}
+                  style={{ marginRight: "8px" }}
+                >
+                  Accept
+                </button>
+                <button onClick={() => denyRequest(reqUserId)}>Deny</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* RIGHT SIDEBAR */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          height: "100vh",
+          width: "300px",
+          backgroundColor: "#fff",
+          boxShadow: "-2px 0 5px rgba(0, 0, 0, 0.3)",
+          padding: "20px",
+          transition: "transform 0.3s ease-in-out",
+          transform: isSidebarOpen ? "translateX(0%)" : "translateX(100%)",
+          zIndex: 1000,
+          overflowY: "auto",
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            fontSize: "20px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          ✖
+        </button>
+
+        <h3>Add a Friend</h3>
+        {users
+  .filter((u) => u.id !== user.userId) // don't show yourself
+  .map((u, i) => {
+    const isIncoming = incomingRequests.includes(u.id);
+    const isSent = sentRequests.includes(u.id);
 
     return (
-        <h2>Welcome: {user}</h2>
-    )
-}
+      <div
+        key={i}
+        style={{
+          borderBottom: "1px solid black",
+          padding: "0 5px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          cursor: "default",
+        }}
+      >
+        <p style={{ fontWeight: "bold" }}>
+          {`${u?.firstName || ""} ${u?.lastName || ""}`.trim()}
+        </p>
 
- 
+        {/* 👇 Conditional buttons */}
+        {isIncoming ? (
+          <div style={{ display: "flex", gap: "5px" }}>
+            <button
+              style={{ height: "30px" }}
+              onClick={() => acceptRequest(u.id)}
+            >
+              Accept
+            </button>
+            <button
+              style={{ height: "30px" }}
+              onClick={() => denyRequest(u.id)}
+            >
+              Deny
+            </button>
+          </div>
+        ) : isSent ? (
+          <button disabled style={{ height: "30px", opacity: 0.6 }}>
+            Requested
+          </button>
+        ) : (
+          <button
+            style={{ height: "30px" }}
+            onClick={(e) => {
+              e.preventDefault();
+              addFriend(u.id);
+            }}
+          >
+            Add
+          </button>
+        )}
+      </div>
+    );
+  })}
+      </div>
+
+      {/* OVERLAY */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.3)",
+            zIndex: 999,
+          }}
+        />
+      )}
+    </>
+  );
+};

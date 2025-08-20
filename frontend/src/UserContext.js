@@ -4,61 +4,75 @@ import axios from "axios";
 
 export const UserContext = createContext({
   user: null,
-  contextToken: "",
+  token: "",
   users: [],
+  setUser: () => {},
+  setToken: () => {},
+  setUsers: () => {},
 });
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
+  const [token, setTokenState] = useState(() => localStorage.getItem("token") || "");
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    try {
+      return token ? jwtDecode(token) : null;
+    } catch (error) {
+      console.error("Invalid token in storage:", error);
+      return null;
+    }
+  });
 
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
+  // ✅ Sync token & user together
+  const setToken = (newToken) => {
+    setTokenState(newToken);
+    if (newToken) {
+      localStorage.setItem("token", newToken);
+      try {
+        const decoded = jwtDecode(newToken);
+        setUser(decoded);
+      } catch (err) {
+        console.error("Failed to decode token:", err);
+        setUser(null);
+      }
     } else {
       localStorage.removeItem("token");
+      setUser(null);
     }
-  }, [token]);
+  };
 
+  // ✅ Fetch users when token changes
   useEffect(() => {
     const fetchUsers = async () => {
+      if (!token) {
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(
-          "http://localhost:5000/users/get-users",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const users = response.data.data;
-        setUsers(users);
+        const response = await axios.get("http://localhost:5000/users/get-users", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsers(response.data.data);
       } catch (error) {
-        if (error.response) {
-          console.error(`Failed : ${error.response.data.message}`);
-        } else {
-          console.error("Unexpected error:", error.message);
-        }
+        console.error(
+          "Error fetching users:",
+          error?.response?.data?.message || error.message
+        );
+      } finally {
+        setLoading(false);
       }
     };
-    fetchUsers();
-  }, []);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      try {
-        const decodedUser = jwtDecode(storedToken);
-        setUser(decodedUser);
-        setToken(storedToken);
-      } catch (error) {
-        console.error("Invalid token:", error);
-        setUser(null);
-        setToken(null);
-      }
-    }
-  }, []);
+    fetchUsers();
+  }, [token]);
+
+  if (loading) return <div>Loading context...</div>;
+
   return (
     <UserContext.Provider
       value={{ user, token, users, setUser, setToken, setUsers }}

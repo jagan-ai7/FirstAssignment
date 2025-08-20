@@ -6,11 +6,13 @@ import axios from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { UserContext } from "../UserContext";
 
 export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { setToken } = useContext(UserContext);
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -49,6 +51,7 @@ export const Login = () => {
         localStorage.setItem("token", token);
         localStorage.setItem("id", id);
         console.log("User-----------", response);
+        setToken(token);
         navigate("/layout");
 
         //------------------------------with otp---------------------------------

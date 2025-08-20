@@ -163,6 +163,7 @@
 .popup-itm {
   background-color: #e9f4fe;
   padding: 8px;
+  cursor: pointer;
 }
 
 .popup-btn {
@@ -212,4 +213,20 @@
 
 .forgotchangepassword_button:active {
   transform: scale(0.98);
+}
+
+.add-friend {
+  font-weight: bolder;
+  background-color: transparent;
+  color: white;
+  font-size: 16px;
+  border: none;
+}
+
+.add-friend:hover {
+  transform: scale(1.1);
+}
+
+.add-friend:active {
+  transform: scale(0.9);
 }

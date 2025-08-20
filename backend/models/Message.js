@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
-const Message = sequelize.define("Messages", {
+const Message = sequelize.define("Message", {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,

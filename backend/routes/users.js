@@ -42,13 +42,11 @@ router.post("/register", async (req, res) => {
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser)
-      return res
-        .status(409)
-        .json({
-          statusCode: 409,
-          error: "Email is already existed!",
-          data: "",
-        });
+      return res.status(409).json({
+        statusCode: 409,
+        error: "Email is already existed!",
+        data: "",
+      });
     const hashPassword = await passwordHashed(password);
     const newUser = await User.create({
       firstName,
@@ -56,13 +54,11 @@ router.post("/register", async (req, res) => {
       email,
       password: hashPassword,
     });
-    res
-      .status(201)
-      .json({
-        statusCode: 201,
-        message: "User Created Successfully",
-        data: newUser,
-      });
+    res.status(201).json({
+      statusCode: 201,
+      message: "User Created Successfully",
+      data: newUser,
+    });
   } catch (err) {
     res
       .status(500)
@@ -282,13 +278,11 @@ router.post("/forgot-password", async (req, res) => {
       text: `You requested a password reset. Click the link below:\n\n${resetUrl}\n\nIf you didn't request this, please ignore this email.`,
     });
 
-    return res
-      .status(200)
-      .json({
-        statusCode: 200,
-        message: "Password reset link sent to email",
-        data: resetUrl,
-      });
+    return res.status(200).json({
+      statusCode: 200,
+      message: "Password reset link sent to email",
+      data: resetUrl,
+    });
   } catch (err) {
     return res
       .status(500)
@@ -318,13 +312,11 @@ router.get("/reset-password/:id/:token", async (req, res) => {
 
     const isValid = await bcrypt.compare(token, user.resetToken);
     if (!isValid)
-      return res
-        .status(400)
-        .json({
-          statusCode: 400,
-          message: "Invalid or expired token",
-          data: "",
-        });
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Invalid or expired token",
+        data: "",
+      });
 
     return res
       .status(200)
@@ -366,13 +358,11 @@ router.post("/reset-password/:id/:token", async (req, res) => {
     user.resetExpires = null;
     await user.save();
 
-    res
-      .status(200)
-      .json({
-        statusCode: 200,
-        message: "Password reset successful",
-        data: "",
-      });
+    res.status(200).json({
+      statusCode: 200,
+      message: "Password reset successful",
+      data: "",
+    });
   } catch (err) {
     res
       .status(500)
@@ -397,13 +387,11 @@ router.patch("/change-password", verifyToken, async (req, res) => {
         .json({ statusCode: 403, error: "Password does not match", data: "" });
     const hashedPassword = await passwordHashed(newPassword);
     await User.update({ password: hashedPassword }, { where: { email } });
-    res
-      .status(200)
-      .json({
-        statusCode: 200,
-        message: "Password Changed Successfully",
-        data: "",
-      });
+    res.status(200).json({
+      statusCode: 200,
+      message: "Password Changed Successfully",
+      data: "",
+    });
   } catch (err) {
     res
       .status(500)
@@ -419,22 +407,18 @@ router.post("/create-skills", async (req, res) => {
 
     const existing = await Skill.findOne({ where: { name } });
     if (existing)
-      return res
-        .status(409)
-        .json({
-          statusCode: 409,
-          message: "Skill is already existed",
-          data: "",
-        });
+      return res.status(409).json({
+        statusCode: 409,
+        message: "Skill is already existed",
+        data: "",
+      });
 
     const newSkill = await Skill.create({ name });
-    return res
-      .status(201)
-      .json({
-        statusCode: 201,
-        message: "Skill created successfully",
-        data: newSkill,
-      });
+    return res.status(201).json({
+      statusCode: 201,
+      message: "Skill created successfully",
+      data: newSkill,
+    });
   } catch (error) {
     return res
       .status(500)
@@ -495,13 +479,11 @@ router.post("/user-skills", verifyToken, async (req, res) => {
     const records = skillIds.map((skillId) => ({ userId, skillId }));
     await UserSkills.bulkCreate(records);
 
-    return res
-      .status(201)
-      .json({
-        statusCode: 201,
-        message: "Skills saved successfully",
-        data: "",
-      });
+    return res.status(201).json({
+      statusCode: 201,
+      message: "Skills saved successfully",
+      data: "",
+    });
   } catch (error) {
     res
       .status(500)
@@ -547,6 +529,27 @@ router.get("/get-user/:id", verifyToken, async (req, res) => {
     return res
       .status(200)
       .json({ statusCode: 200, message: "Get User", data: user });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ statusCode: 500, message: "Failed to get user", data: "" });
+  }
+});
+
+//-------------------------Delete User---------------------------
+
+router.delete("/delete-user/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ where: { id } });
+    if (!user)
+      return res
+        .status(404)
+        .json({ statusCode: 404, message: "User not found", data: "" });
+    await User.destroy({ where: { id } });
+    return res
+      .status(200)
+      .json({ statusCode: 200, message: "User Deleted Successfully", data: user });
   } catch (error) {
     return res
       .status(500)

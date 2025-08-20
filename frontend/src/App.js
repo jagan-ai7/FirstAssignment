@@ -34,12 +34,12 @@ const App = () => {
             />
             <Route element={<PrivateRoute />}>
               <Route path="/welcome" element={<Welcome />} />
-              <Route path="/side" element={<Side />} />
               <Route path="/layout" element={<Layout />} />
               <Route path="/changepassword" element={<ChangePassword />} />
               <Route path="/homepage" element={<Homepage />} />
               {/* <Route path='/message' element={<Message />} /> */}
-              <Route path="/chat" element={<Chat />} />
+              {/* <Route path="/side" element={<Side />} />
+              <Route path="/chat" element={<Chat />} /> */}
               <Route path="/messagexample" element={<MessageExample />} />
             </Route>
           </Routes>

@@ -1,8 +1,10 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { socket } from "../socket.js";
+import { io } from "socket.io-client";
 import "./Chat.css";
 import { UserContext } from "../UserContext.js";
+
+const socket = io("http://localhost:5000");
 
 export const Chat = ({ selectedId }) => {
   const { user, token } = useContext(UserContext);
