@@ -3,42 +3,95 @@ import { useContext, useEffect, useState } from "react";
 import "../register/Register.css";
 import { Link } from "react-router-dom";
 import Popup from "reactjs-popup";
+import { socket } from "../socket";
 import { UserContext } from "../UserContext";
-import { io } from "socket.io-client";
-
-const socket = io("http://localhost:5000");
+import {toast, ToastContainer} from "react-toastify";
 
 export const Welcome = () => {
-  const { users, token } = useContext(UserContext);
-  const [user, setUser] = useState("");
+  const { users, token, user, setToken } = useContext(UserContext);
+  const [userName, setUserName] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [incomingRequests, setIncomingRequests] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
+  const [friendsList, setFriendsList] = useState([]);
 
   const fetchUser = async () => {
     try {
       const response = await axios.get(
         "http://localhost:5000/users/protected",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       const { firstName, lastName } = response.data.data;
-      setUser(firstName + " " + lastName);
+      setUserName(`${firstName} ${lastName}`);
     } catch (error) {
       console.error("Access denied:", error.response?.data.error);
     }
   };
 
   useEffect(() => {
+    if (user?.userId) {
+      socket.emit("login", user.userId);
+    }
+  }, [user]);
+
+  useEffect(() => {
     fetchUser();
   }, []);
 
-  const addFriend = (toUserId) => {
+  useEffect(() => {
   if (!user?.userId) return;
-  socket.emit("send_friend_request", { fromUserId: user.userId, toUserId });
-  alert("Friend request sent!");
-};
+  console.log("📡 Listening for socket events...");
+
+  socket.on("friend_request_received", async ({ fromUserId }) => {
+     console.log("📥 Friend request received from:", fromUserId);
+    setIncomingRequests((prev) =>
+      prev.includes(fromUserId) ? prev : [...prev, fromUserId]
+    );
+  });
+
+  socket.on("friend_request_accepted", async ({ userId }) => {
+    console.log("✅ Friend request accepted by:", userId);
+    toast.success(`Friend request accepted by user ${userId}`);
+    setSentRequests((prev) => prev.filter((id) => id !== userId));
+    setFriendsList((prev) => [...prev, userId]);
+  });
+
+  socket.on("friend_request_denied", async ({ userId }) => {
+    console.log("🚫 Friend request denied by:", userId);
+    toast.error(`Friend request denied by user ${userId}`);
+    setSentRequests((prev) => prev.filter((id) => id !== userId));
+  });
+
+  return () => {
+    socket.off("friend_request_received");
+    socket.off("friend_request_accepted");
+    socket.off("friend_request_denied");
+  };
+}, [user]);
+
+
+
+  const addFriend = (toUserId) => {
+    if (!user?.userId) return toast.info("Please login first.");
+    if (sentRequests.includes(toUserId) || friendsList.includes(toUserId))
+      return;
+    socket.emit("send_friend_request", { fromUserId: user.userId, toUserId });
+    setSentRequests((prev) => [...prev, toUserId]);
+    toast.success("Friend request sent!");
+  };
+
+  const acceptRequest = (fromUserId) => {
+    socket.emit("accept_friend_request", { fromUserId, toUserId: user.userId });
+    setIncomingRequests((prev) => prev.filter((id) => id !== fromUserId));
+    setFriendsList((prev) => [...prev, fromUserId]);
+  };
+
+  const denyRequest = (fromUserId) => {
+    socket.emit("deny_friend_request", { fromUserId, toUserId: user.userId });
+    setIncomingRequests((prev) => prev.filter((id) => id !== fromUserId));
+  };
 
   return (
     <>
@@ -60,7 +113,7 @@ export const Welcome = () => {
             alignSelf: "center",
           }}
         >
-          {user}
+          {userName}
         </h2>
 
         {/* Add Friend Button */}
@@ -99,6 +152,7 @@ export const Welcome = () => {
               to={"/login"}
               onClick={() => {
                 localStorage.clear();
+                setToken("");
               }}
             >
               Logout
@@ -107,7 +161,7 @@ export const Welcome = () => {
         </Popup>
       </div>
 
-      {/* RIGHT SIDEBAR */}
+      {/* Sidebar */}
       <div
         style={{
           position: "fixed",
@@ -123,7 +177,6 @@ export const Welcome = () => {
           zIndex: 1000,
         }}
       >
-        {/* Close button */}
         <button
           onClick={() => setIsSidebarOpen(false)}
           style={{
@@ -140,25 +193,89 @@ export const Welcome = () => {
         </button>
 
         <h3>Add a Friend</h3>
-        {users.map((user, i) => (
-          <div style={{borderBottom: '1px solid black', padding: '0 5px'}}
-            key={i}
-            onClick={(e) => {
-              e.preventDefault();
-              // onSelectUser(user.id);
+        {/* Incoming Friend Requests */}
+        {/* {incomingRequests.length > 0 && (
+          <div
+            style={{
+              backgroundColor: "#f4f4f4",
+              padding: "10px",
+              borderRadius: "5px",
+              maxWidth: "300px",
+              margin: "10px",
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'row', justifyContent:'space-between' }}>
-              <p style={{ fontWeight: "bold" }}>
-                {`${user?.firstName || ""} ${user?.lastName || ""}`.trim()}
-              </p>
-              <button style={{ height: '30px', alignSelf: 'center'}} onClick={(e) => { e.preventDefault(); addFriend();}}>Add</button>
-            </div>
+            <h4>Incoming Friend Requests</h4>
+            {incomingRequests.map((reqId) => {
+              const u = users.find((u) => u.id === reqId);
+              return (
+                <div
+                  key={reqId}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderBottom: "1px solid #ccc",
+                    paddingBottom: "4px",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <span>{`${u?.firstName || "User"} ${
+                    u?.lastName || ""
+                  }`}</span>
+                  <div>
+                    <button
+                      onClick={() => acceptRequest(reqId)}
+                      style={{ marginRight: "8px" }}
+                    >
+                      Accept
+                    </button>
+                    <button onClick={() => denyRequest(reqId)}>Deny</button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
+        )} */}
+        {users
+          .filter((u) => u.id !== user?.userId)
+          .map((u) => {
+            const isIncoming = incomingRequests.includes(u.id);
+            const isSent = sentRequests.includes(u.id);
+            const isFriend = friendsList.includes(u.id);
+
+            return (
+              <div
+                key={u.id}
+                style={{
+                  borderBottom: "1px solid black",
+                  padding: "0 5px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  style={{ fontWeight: "bold" }}
+                >{`${u.firstName} ${u.lastName}`}</p>
+                {isFriend ? (
+                  <span style={{ color: "green" }}>Friend</span>
+                ) : isIncoming ? (
+                  <div style={{ display: "flex", gap: "5px" }}>
+                    <button onClick={() => acceptRequest(u.id)}>Accept</button>
+                    <button onClick={() => denyRequest(u.id)}>Deny</button>
+                  </div>
+                ) : isSent ? (
+                  <button disabled style={{ opacity: 0.6 }}>
+                    Requested
+                  </button>
+                ) : (
+                  <button onClick={() => addFriend(u.id)}>Add</button>
+                )}
+              </div>
+            );
+          })}
       </div>
 
-      {/* OVERLAY */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -173,9 +290,11 @@ export const Welcome = () => {
           }}
         />
       )}
+      <ToastContainer/>
     </>
   );
 };
+
 
 // export const Welcome = () => {
 //   const { token } = useContext(UserContext);

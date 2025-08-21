@@ -6,86 +6,146 @@ import { UserContext } from "../UserContext.js";
 
 export const Chat = ({ selectedId }) => {
   const { user, token } = useContext(UserContext);
-  // const token = localStorage.getItem('token');
-  // const { id } = useParams();
-  const id = selectedId;
-  const userId = user?.userId;
-  const [name, setName] = useState();
-  // const userId = localStorage.getItem('id');
+  const userId = user?.userId?.toString();
+  const id = selectedId?.toString(); // Ensure it's a string
 
+  const [name, setName] = useState("");
   const [toId, setToId] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState({});
-  console.log("id------", id);
-  const hasLoggedIn = useRef(false);
+  const [friends, setFriends] = useState([]); // Friends fetched from backend
+  // Fetch friends
+  useEffect(() => {
+    if (!userId || !token) return;
+
+    const fetchFriends = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/users/${userId}/friends`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const friendIds = response.data?.data || [];
+        setFriends(friendIds.map(String)); // Ensure all IDs are strings
+      } catch (error) {
+        console.error("Failed to fetch friends:", error);
+        setFriends([]);
+      }
+    };
+
+    fetchFriends();
+  }, [userId, token]);
+
+  // Fetch selected user's details
   useEffect(() => {
     if (!id || !token) return;
+
     const fetchUser = async () => {
       try {
         const response = await axios.get(
           `http://localhost:5000/users/get-user/${id}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         const resData = response.data.data;
-        setToId(resData.id);
+        setToId(resData.id?.toString());
         setName(`${resData.firstName} ${resData.lastName}`);
       } catch (error) {
-        if (error.response) {
-          console.error(`Failed : ${error.response.data.message}`);
-        } else {
-          console.error("Unexpected error:", error.message);
-        }
+        console.error("Failed to fetch user:", error);
+        setToId("");
+        setName("");
       }
     };
+
     fetchUser();
-  }, [id]);
+  }, [id, token]);
 
   useEffect(() => {
-  if (!userId) return;
-  if (!hasLoggedIn.current) {
-    socket.emit("login", userId);
-    hasLoggedIn.current = true;
-  }
-}, [userId]);
+  const fetchMessages = async () => {
+    if (!userId || !toId || !token) return;
 
-  // Helper to add message to the correct chat in state
-  const addMessage = (newMsg) => {
-    // Determine chat partner's id (the "other" user in conversation)
-    const otherUserId = newMsg.from === userId ? newMsg.to : newMsg.from;
-    setMessages((prev) => {
-      const userMessages = prev[otherUserId] || [];
-      return {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/users/messages/${userId}/${toId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const loadedMessages = response.data.data.map((msg) => ({
+        from: msg.fromId,
+        to: msg.toId,
+        message: msg.content, // 👈 from DB
+        id: msg.id,
+        timestamp: msg.createdAt,
+      }));
+
+      setMessages((prev) => ({
         ...prev,
-        [otherUserId]: [...userMessages, newMsg],
-      };
-    });
+        [toId]: loadedMessages,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch chat history:", error);
+    }
   };
 
-  // Listen for incoming private messages
-  useEffect(() => {
-    socket.on("private_message", (newMsg) => {
-      addMessage(newMsg);
-    });
+  fetchMessages();
+}, [userId, toId, token]);
 
-    // Listen for updated online users list (new addition)
-    socket.on("users_update", (onlineUsers) => {
-      console.log("Online users:", onlineUsers);
-      // Optionally, update state here if you want to display online users
-    });
+
+  // Check if selected user is a friend
+  const isFriend = friends.includes(id);
+
+  // Add new message to chat
+  const addMessage = (newMsg) => {
+    console.log('NewMSG=========', newMsg);
+  const from = newMsg.fromId;
+  const to = newMsg.toId;
+  const message = newMsg.message;
+  const id = newMsg.id || null;
+  const timestamp = newMsg.timestamp || newMsg.createdAt || null;
+
+  const otherUserId = from?.toString() === userId ? to?.toString() : from?.toString();
+
+  setMessages(prev => ({
+    ...prev,
+    [otherUserId]: [...(prev[otherUserId] || []), { from, to, message, id, timestamp }],
+  }));
+};
+
+
+  // Socket listeners
+  useEffect(() => {
+    const handlePrivateMessage = (newMsg) => {
+      addMessage(newMsg);
+    };
+
+    const handleError = ({ message }) => {
+      alert(message);
+    };
+
+    socket.on("private_message", handlePrivateMessage);
+    socket.on("error_message", handleError);
 
     return () => {
-      socket.off("private_message");
-      socket.off("users_update");
+      socket.off("private_message", handlePrivateMessage);
+      socket.off("error_message", handleError);
     };
-  }, []);
+  }, [userId]);
 
+  // Send a new message
   const sendMessage = () => {
+    if (!isFriend) {
+      console.log("You can only message your friends.");
+      return;
+    }
+
     if (userId && toId && message.trim()) {
-      const newMsg = { from: userId, to: toId, message: message.trim() };
+      const newMsg = {
+        fromId: userId,
+        toId: toId,
+        message: message.trim(),
+      };
       socket.emit("private_message", newMsg);
       addMessage(newMsg);
       setMessage("");
@@ -93,104 +153,110 @@ export const Chat = ({ selectedId }) => {
   };
 
   const chatMessages = messages[toId] || [];
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: "9",
-          gap: "2px",
-          overflow: "hidden",
-        }}
-      >
-        {selectedId ? (
-          <>
-            <div style={{ display: "flex" }}>
-              <h2
-                style={{
-                  marginLeft: "30px",
-                  fontFamily: "Times New Roman, Times, serif",
-                  fontSize: "20Spx",
-                }}
-              >
-                {name}
-              </h2>
-            </div>
-            <hr style={{ width: "94%" }} />
-            <div
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        flexGrow: "9",
+        gap: "2px",
+        overflow: "hidden",
+      }}
+    >
+      {selectedId ? (
+        <>
+          <div style={{ display: "flex" }}>
+            <h2
               style={{
-                flexGrow: 9,
-                padding: "20px",
-                overflowY: "auto",
-                margin: "0px 10px",
+                marginLeft: "30px",
+                fontFamily: "Times New Roman, Times, serif",
+                fontSize: "20px",
               }}
             >
-              {chatMessages.map((msg, i) => {
-                const isSender = msg.from === userId;
-                return (
+              {name}
+            </h2>
+          </div>
+          <hr style={{ width: "94%" }} />
+          <div
+            style={{
+              flexGrow: 9,
+              padding: "20px",
+              overflowY: "auto",
+              margin: "0px 10px",
+            }}
+          >
+            {chatMessages.map((msg, i) => {
+              const isSender = msg.from?.toString() === userId;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: isSender ? "flex-end" : "flex-start",
+                    marginBottom: "8px",
+                  }}
+                >
                   <div
-                    key={i}
                     style={{
-                      display: "flex",
-                      justifyContent: isSender ? "flex-end" : "flex-start",
-                      marginBottom: "8px",
+                      backgroundColor: isSender ? "#4A90E2" : "#d2d6da",
+                      color: isSender ? "#FFFFFF" : "#161f28",
+                      padding: "8px 12px",
+                      borderRadius: isSender
+                        ? "15px 0 15px 15px"
+                        : "0 15px 15px 15px",
+                      maxWidth: "70%",
+                      wordWrap: "break-word",
+                      display: "inline-block",
+                      textAlign: isSender ? "right" : "left",
+                      boxSizing: "border-box",
+                      whiteSpace: "pre-wrap",
+                      margin: "8px 0",
                     }}
                   >
-                    <div
-                      style={{
-                        backgroundColor: isSender ? "#4A90E2" : "#d2d6da",
-                        color: isSender ? "#FFFFFF" : "#161f28",
-                        padding: "8px 12px",
-                        borderRadius: isSender
-                          ? "15px 0 15px 15px"
-                          : "0 15px 15px 15px",
-                        maxWidth: "70%",
-                        wordWrap: "break-word",
-                        display: "inline-block",
-                        textAlign: isSender ? "right" : "left",
-                        boxSizing: "border-box",
-                        whiteSpace: "pre-wrap",
-                        margin: "8px 0",
-                      }}
-                    >
-                      <span>{msg.message}</span>
-                    </div>
+                    <span>{msg.message}</span>
                   </div>
-                );
-              })}
-            </div>
-            <hr style={{ width: "94%" }} />
-            <div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
-              <input
-                className="chat-input"
-                type="text"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendMessage();
-                }}
-                placeholder="Type a message "
-                onChange={(e) => {
-                  setMessage(e.target.value);
-                }}
-                value={message}
+                </div>
+              );
+            })}
+          </div>
+          <hr style={{ width: "94%" }} />
+          <div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
+            <input
+              className="chat-input"
+              type="text"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
+              placeholder="Type a message "
+              onChange={(e) => setMessage(e.target.value)}
+              value={message}
+              disabled={!isFriend}
+            />
+            <button
+              className="chat-btn"
+              onClick={(e) => {
+                e.preventDefault();
+                sendMessage();
+              }}
+              disabled={!isFriend}
+            >
+              <img
+                src="/images/send-button1.png"
+                alt="Send"
+                style={{ width: "30px", height: "25px" }}
               />
-              <button
-                className="chat-btn"
-                onClick={(e) => {
-                  e.preventDefault();
-                  sendMessage();
-                }}
-              >
-                <img
-                  src="/images/send-button1.png"
-                  alt="Send"
-                  style={{ width: "30px", height: "25px" }}
-                />
-              </button>
-            </div>
-          </>
-        ) : (
-          <div style={{ margin: "auto" }}>Select a user to start chatting</div>
-        )}
-      </div>
-    );
+            </button>
+          </div>
+          {!isFriend && (
+            <p style={{ color: "red", marginLeft: "30px" }}>
+              You can only message your friends.
+            </p>
+          )}
+        </>
+      ) : (
+        <div style={{ margin: "auto" }}>Select a user to start chatting</div>
+      )}
+    </div>
+  );
 };

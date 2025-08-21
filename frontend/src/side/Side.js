@@ -2,17 +2,17 @@ import "./Side.css";
 import { useContext } from "react";
 import { UserContext } from "../UserContext";
 
-export const Side = ({ onSelectUser }) => {
+export const Side = ({ friends=[], onSelectUser }) => {
   const { users } = useContext(UserContext);
 
-  // const selectUser = async (id) => {
-  //     navigate(`/chat/${id}`);
-  // }
+  // Filter users to show only friends
+  const friendsToShow = users.filter((user) => friends.includes(user.id));
+  console.log('users-------',users);
 
   return (
     <>
       <div className="side-container">
-        {users.map((user, i) => (
+        {friendsToShow.map((user, i) => (
           <div
             className="user-container"
             key={i}

@@ -112,19 +112,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("get_friend_requests", (userId) => {
-    const incoming = friendRequests[userId]
-      ? Array.from(friendRequests[userId])
-      : [];
-    socket.emit("friend_requests_list", { incoming });
-  });
-
-  socket.on("get_friends", (userId) => {
-    const userFriends = friends[userId] ? Array.from(friends[userId]) : [];
-    socket.emit("friends_list", { friends: userFriends });
-  });
-
-  // Listen for private message: { from, to, message }
+   // Listen for private message: { from, to, message }
   socket.on("private_message", ({ from, to, message }) => {
     const recipientSocketId = users[to];
     if (recipientSocketId) {

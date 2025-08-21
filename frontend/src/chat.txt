@@ -196,3 +196,29 @@ export const Chat = ({ selectedId }) => {
       </div>
     );
 };
+
+
+
+  // Add new message to chat
+  // const addMessage = (newMsg) => {
+  //   const normalizedMsg = {
+  //     from: newMsg.fromId ?? newMsg.from,
+  //     to: newMsg.toId ?? newMsg.to ?? id,
+  //     message: newMsg.message ?? newMsg.content,
+  //     id: newMsg.id || newMsg.tempId || null,
+  //     timestamp: newMsg.timestamp || newMsg.createdAt || null,
+  //   };
+
+  //   const otherUserId =
+  //     normalizedMsg.from?.toString() === userId
+  //       ? normalizedMsg.to?.toString()
+  //       : normalizedMsg.from?.toString();
+
+  //   setMessages((prev) => {
+  //     const userMessages = prev[otherUserId] || [];
+  //     return {
+  //       ...prev,
+  //       [otherUserId]: [...userMessages, normalizedMsg],
+  //     };
+  //   });
+  // };

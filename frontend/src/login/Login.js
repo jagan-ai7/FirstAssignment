@@ -14,15 +14,22 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const { setToken } = useContext(UserContext);
   const navigate = useNavigate();
-
   const location = useLocation();
-  useEffect(() => {
-    if (location.state?.toast) {
-      toast.success(location.state.toast);
-    } else if (location.state?.toast2) {
-      toast.success(location.state.toast2);
-    }
-  }, [location]);
+
+  // useEffect(() => {
+  //   if (location.state?.showRegisterToast) {
+  //     toast.success(location.state.showRegisterToast);
+  //     navigate(location.pathname, { replace: true });
+  //   }
+  // }, [location, navigate]);
+
+  // useEffect(() => {
+  //   if (location.state?.toast) {
+  //     toast.success(location.state.toast);
+  //   } else if (location.state?.toast2) {
+  //     toast.success(location.state.toast2);
+  //   }
+  // }, [location]);
 
   const formik = useFormik({
     initialValues: {
@@ -52,7 +59,7 @@ export const Login = () => {
         localStorage.setItem("id", id);
         console.log("User-----------", response);
         setToken(token);
-        navigate("/layout");
+        navigate("/layout", { state: { showLoginToast: "Login Successful" } });
 
         //------------------------------with otp---------------------------------
         // navigate('/verification')
@@ -132,11 +139,15 @@ export const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         )}
-        <Link className="linkfp" to={"/forgotpassword"}>
-          Forgot Password
-        </Link>
+        <div style={{display: 'flex', justifyContent: 'space-evenly'}}>
+          <Link className="linkfp" to={"/register"}>
+            Signup
+          </Link>
+          <Link className="linkfp" to={"/forgotpassword"}>
+            Forgot Password
+          </Link>
+        </div>
       </form>
-      <ToastContainer />
     </div>
   );
 };

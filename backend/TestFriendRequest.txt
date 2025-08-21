@@ -1,0 +1,96 @@
+here we need to create and call the api to change Add button into Friend and stay to Friend
+ChatGPT said:
+
+Yes, you're exactly right. To make the "Add" → "Friend" label persist across sessions and reloads, you need to:
+
+✅ What’s Needed
+
+Save friendships in the database (✅ you're already doing this).
+
+Fetch the list of friends and sent requests on component mount via API.
+
+Update local state (friendsList, sentRequests, incomingRequests) using that API data.
+
+Ensure your frontend checks those lists before deciding which button (Add / Requested / Friend / Accept / Deny) to show — which you're already doing.
+
+✅ Backend: Create API Endpoints
+1. Get Friends List for User
+// GET /users/:userId/friends
+router.get("/:userId/friends", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const friends = await Friend.findAll({
+      where: { userId },
+      attributes: ["friendId"],
+    });
+
+    res.json({ friends: friends.map((f) => f.friendId) });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch friends." });
+  }
+});
+
+2. Get Sent & Incoming Friend Requests
+// GET /users/:userId/friend-requests
+router.get("/:userId/friend-requests", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const incoming = await FriendRequest.findAll({
+      where: { toUserId: userId, status: "pending" },
+      attributes: ["fromUserId"],
+    });
+
+    const sent = await FriendRequest.findAll({
+      where: { fromUserId: userId, status: "pending" },
+      attributes: ["toUserId"],
+    });
+
+    res.json({
+      incoming: incoming.map((r) => r.fromUserId),
+      sent: sent.map((r) => r.toUserId),
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch friend requests." });
+  }
+});
+
+✅ Frontend: Fetch on Mount (Welcome.jsx)
+
+Add this inside a useEffect after login/token is available:
+
+useEffect(() => {
+  if (!user?.userId || !token) return;
+
+  const fetchFriendData = async () => {
+    try {
+      const [friendsRes, requestsRes] = await Promise.all([
+        axios.get(`http://localhost:5000/users/${user.userId}/friends`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(
+          `http://localhost:5000/users/${user.userId}/friend-requests`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
+      ]);
+
+      setFriendsList(friendsRes.data.friends || []);
+      setIncomingRequests(requestsRes.data.incoming || []);
+      setSentRequests(requestsRes.data.sent || []);
+    } catch (err) {
+      console.error("❌ Failed to load friend data:", err);
+    }
+  };
+
+  fetchFriendData();
+}, [user, token]);
+
+✅ Summary
+Step	Description
+✅ 1	You already handle friendship via socket.emit("accept_friend_request").
+✅ 2	You're updating the UI in real-time on socket events.
+🔄 3	Now you add API endpoints to persist and load on mount.
+✅ 4	The users.map() logic in your UI already handles showing the right button.
+
+Let me know if you want help writing the Express routes fully or integrating authentication headers.

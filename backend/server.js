@@ -5,7 +5,8 @@ const http = require("http");
 const cors = require("cors");
 const sequelize = require("./config/database");
 const userRoutes = require("./routes/users");
-const { createMessage } = require("./controllers/messageController");
+const { User, FriendRequest, Friend, Message } = require("./models");
+const { Op } = require("sequelize");
 
 const app = express();
 const server = http.createServer(app);
@@ -22,128 +23,178 @@ app.use("/users", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-// const users = {};
-
-// io.on("connection", (socket) => {
-//   console.log("User connected:", socket.id);
-
-//   // When user logs in, store their socket.id by userId
-//   socket.on("login", (userId) => {
-//     users[userId] = socket.id;
-//     console.log(`User logged in: ${userId}`);
-
-//     // Broadcast updated user list to everyone
-//     io.emit("users_update", Object.keys(users));
-//   });
-
-//   // Listen for private message: { from, to, message }
-//   socket.on("private_message", ({ from, to, message }) => {
-//     const recipientSocketId = users[to];
-//     if (recipientSocketId) {
-//       io.to(recipientSocketId).emit("private_message", { from, message });
-//     } else {
-//       console.log(`User ${to} not online`);
-//       // Optionally handle offline messages here
-//     }
-//   });
-
-//   socket.on("disconnect", () => {
-//     for (const [userId, socketId] of Object.entries(users)) {
-//       if (socketId === socket.id) {
-//         delete users[userId];
-//         console.log(`User disconnected: ${userId}`);
-//         // Broadcast updated user list after disconnect
-//         io.emit("users_update", Object.keys(users));
-//         break;
-//       }
-//     }
-//   });
-// });
-
-const users = {}; // userId => socket.id
-const friendRequests = {}; // userId => Set of userIds who sent friend requests
-const friends = {}; // userId => Set of friends' userIds
+const usersOnline = {}; // userId => socket.id
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("📡 User connected:", socket.id);
 
-  socket.on("login", (userId) => {
-    users[userId] = socket.id;
-    if (!friendRequests[userId]) friendRequests[userId] = new Set();
-    if (!friends[userId]) friends[userId] = new Set();
-
-    io.emit("users_update", Object.keys(users));
+  socket.on("login", async (userId) => {
+    usersOnline[userId] = socket.id;
+    console.log(`✅ User ${userId} logged in via socket`);
+    io.emit("users_update", Object.keys(usersOnline));
   });
 
-  socket.on("send_friend_request", ({ fromUserId, toUserId }) => {
-    if (!friendRequests[toUserId]) friendRequests[toUserId] = new Set();
-    friendRequests[toUserId].add(fromUserId);
+  // ✅ Send Friend Request
+  socket.on("send_friend_request", async ({ fromUserId, toUserId }) => {
+    try {
+      // Step 1: Check if already friends
+      const isAlreadyFriend = await Friend.findOne({
+        where: {
+          userId: fromUserId,
+          friendId: toUserId,
+        },
+      });
 
-    const recipientSocketId = users[toUserId];
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit("friend_request_received", { fromUserId });
-    }
-  });
-
-  socket.on("accept_friend_request", ({ fromUserId, toUserId }) => {
-    friendRequests[toUserId]?.delete(fromUserId);
-
-    if (!friends[toUserId]) friends[toUserId] = new Set();
-    if (!friends[fromUserId]) friends[fromUserId] = new Set();
-
-    friends[toUserId].add(fromUserId);
-    friends[fromUserId].add(toUserId);
-
-    const toSocket = users[toUserId];
-    const fromSocket = users[fromUserId];
-
-    if (toSocket)
-      io.to(toSocket).emit("friend_request_accepted", { userId: fromUserId });
-    if (fromSocket)
-      io.to(fromSocket).emit("friend_request_accepted", { userId: toUserId });
-  });
-
-  socket.on("deny_friend_request", ({ fromUserId, toUserId }) => {
-    friendRequests[toUserId]?.delete(fromUserId);
-
-    const senderSocketId = users[fromUserId];
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("friend_request_denied", { userId: toUserId });
-    }
-  });
-
-   // Listen for private message: { from, to, message }
-  socket.on("private_message", ({ from, to, message }) => {
-    const recipientSocketId = users[to];
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit("private_message", { from, message });
-    } else {
-      console.log(`User ${to} not online`);
-      // Optionally handle offline messages here
-    }
-  });
-
-  socket.on("friend_message", ({ from, to, message }) => {
-    if (friends[from]?.has(to)) {
-      const recipientSocketId = users[to];
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit("friend_message", { from, message });
+      if (isAlreadyFriend) {
+        const senderSocket = usersOnline[fromUserId];
+        if (senderSocket) {
+          io.to(senderSocket).emit("error_message", {
+            message: "⚠️ You are already friends.",
+          });
+        }
+        return;
       }
-    } else {
-      const senderSocketId = users[from];
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("error_message", {
-          message: "You can only message friends.",
+
+      // Step 2: Check if request already exists
+      const existingRequest = await FriendRequest.findOne({
+        where: {
+          fromUserId,
+          toUserId,
+          status: "pending",
+        },
+      });
+
+      if (existingRequest) {
+        const senderSocket = usersOnline[fromUserId];
+        if (senderSocket) {
+          io.to(senderSocket).emit("error_message", {
+            message: "⏳ Friend request already sent.",
+          });
+        }
+        return;
+      }
+
+      // Step 3: Create the friend request
+      await FriendRequest.create({ fromUserId, toUserId, status: "pending" });
+      socket.emit("friend_request_sent", { toUserId });
+
+      const recipientSocket = usersOnline[toUserId];
+      if (recipientSocket) {
+        io.to(recipientSocket).emit("friend_request_received", { fromUserId });
+      }
+    } catch (err) {
+      console.error("❌ Error sending friend request:", err);
+      const senderSocket = usersOnline[fromUserId];
+      if (senderSocket) {
+        io.to(senderSocket).emit("error_message", {
+          message: "❌ Failed to send friend request.",
         });
       }
     }
   });
 
+  // ✅ Accept Friend Request
+  socket.on("accept_friend_request", async ({ fromUserId, toUserId }) => {
+    try {
+      // ✅ Check if friendship already exists in either direction
+      const existingFriend = await Friend.findOne({
+        where: {
+          [Op.or]: [
+            { userId: fromUserId, friendId: toUserId },
+            { userId: toUserId, friendId: fromUserId },
+          ],
+        },
+      });
+
+      if (existingFriend) {
+        const socketToNotify = usersOnline[toUserId] || usersOnline[fromUserId];
+        if (socketToNotify) {
+          io.to(socketToNotify).emit("error_message", {
+            message: "⚠️ You are already friends.",
+          });
+        }
+        return;
+      }
+
+      // ✅ Update the friend request
+      await FriendRequest.update(
+        { status: "accepted" },
+        { where: { fromUserId, toUserId } }
+      );
+
+      // ✅ Create mutual friendship
+      await Friend.bulkCreate([
+        { userId: toUserId, friendId: fromUserId },
+        { userId: fromUserId, friendId: toUserId },
+      ]);
+      const senderSocket = usersOnline[fromUserId];
+      if (senderSocket) {
+        io.to(senderSocket).emit("friend_request_accepted", {
+          userId: toUserId, // The user who accepted the request
+        });
+      }
+      const receiverSocket = usersOnline[toUserId];
+      if (receiverSocket) {
+        io.to(receiverSocket).emit("friend_request_accepted_by_you", {
+          userId: fromUserId,
+        });
+      }
+    } catch (err) {
+      console.error("❌ Error accepting friend request:", err.message);
+    }
+  });
+
+  // ✅ Deny Friend Request
+  socket.on("deny_friend_request", async ({ fromUserId, toUserId }) => {
+    await FriendRequest.destroy({ where: { fromUserId, toUserId } });
+
+    const senderSocket = usersOnline[fromUserId];
+    if (senderSocket) {
+      io.to(senderSocket).emit("friend_request_denied", { userId: toUserId });
+    }
+  });
+
+  // ✅ Private Messaging (only if friends)
+  socket.on("private_message", async ({ fromId, toId, message }) => {
+    const isFriend = await Friend.findOne({
+      where: { userId: fromId, friendId: toId },
+    });
+
+    if (!isFriend) {
+      const senderSocket = usersOnline[fromId];
+      if (senderSocket) {
+        io.to(senderSocket).emit("error_message", {
+          message: "❌ You can only message friends.",
+        });
+      }
+      return;
+    }
+
+    const saved = await Message.create({
+      fromId,
+      toId,
+      content: message,
+      type: "text",
+    });
+
+    const recipientSocket = usersOnline[toId];
+    if (recipientSocket) {
+      io.to(recipientSocket).emit("private_message", {
+        fromId,
+        toId,
+        message: saved.content,
+        id: saved.id,
+        timestamp: saved.createdAt,
+      });
+    }
+  });
+
+  // ✅ Disconnect
   socket.on("disconnect", () => {
-    for (const [userId, socketId] of Object.entries(users)) {
-      if (socketId === socket.id) {
-        delete users[userId];
-        io.emit("users_update", Object.keys(users));
+    for (const [userId, sockId] of Object.entries(usersOnline)) {
+      if (sockId === socket.id) {
+        delete usersOnline[userId];
+        io.emit("users_update", Object.keys(usersOnline));
         break;
       }
     }

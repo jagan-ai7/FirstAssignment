@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { User, Skill, UserSkills } = require("../models");
+const { User, Friend, FriendRequest, Message } = require("../models");
 const Otp = require("../models/otp");
 const bcrypt = require("bcrypt");
-const { createMessage } = require("../controllers/messageController");
+// const { createMessage } = require("../controllers/messageController");
 const {
   userSchema,
   userLoginSchema,
@@ -549,11 +549,103 @@ router.delete("/delete-user/:id", verifyToken, async (req, res) => {
     await User.destroy({ where: { id } });
     return res
       .status(200)
-      .json({ statusCode: 200, message: "User Deleted Successfully", data: user });
+      .json({
+        statusCode: 200,
+        message: "User Deleted Successfully",
+        data: user,
+      });
   } catch (error) {
     return res
       .status(500)
       .json({ statusCode: 500, message: "Failed to get user", data: "" });
+  }
+});
+
+router.get("/:userId/friends", async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ statusCode: 400, message: "Missing userId in request params", data: [] });
+  }
+  try {
+    const friends = await Friend.findAll({
+      where: { userId },
+      attributes: ["friendId"],
+    });
+
+    const friendIds = friends.map((f) => f.friendId);
+
+    res
+      .status(200)
+      .json({
+        statusCode: 200,
+        message: "Friends found",
+        data: friendIds,
+      });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ statusCode: 500, error: "Failed to fetch friends.", data: "" });
+  }
+});
+
+router.get("/:userId/friend-requests", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const incoming = await FriendRequest.findAll({
+      where: { toUserId: userId, status: "pending" },
+      attributes: ["fromUserId"],
+    });
+
+    const sent = await FriendRequest.findAll({
+      where: { fromUserId: userId, status: "pending" },
+      attributes: ["toUserId"],
+    });
+
+    if (incoming.length === 0 && sent.length === 0) {
+      return res.status(200).json({
+        statusCode: 200,
+        message: "There are no pending friend requests.",
+        data: {
+          incoming: [],
+          sent: [],
+        },
+      });
+    }
+
+    res.status(200).json({
+      statusCode: 200,
+      message: "Friend requests fetched successfully",
+      data: {
+        incoming: incoming.map((r) => r.fromUserId),
+        sent: sent.map((r) => r.toUserId),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ statusCode: 500, error: "Failed to fetch friend requests.", data: '' });
+  }
+});
+
+// GET /messages/:userId/:friendId
+router.get("/messages/:userId/:friendId", async (req, res) => {
+  const { userId, friendId } = req.params;
+
+  try {
+    const messages = await Message.findAll({
+      where: {
+        [Op.or]: [
+          { fromId: userId, toId: friendId },
+          { fromId: friendId, toId: userId },
+        ],
+      },
+      order: [["createdAt", "ASC"]],
+    });
+
+    res.status(200).json({ statusCode: 200, success: true, data: messages });
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch messages." });
   }
 });
 

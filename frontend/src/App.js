@@ -17,6 +17,7 @@ import { Chat } from "./side/Chat";
 import { MessageExample } from "./MessageExample";
 import { Layout } from "./Layout";
 import { UserProvider } from "./UserContext";
+import { ToastContainer } from "react-toastify";
 
 const App = () => {
   return (
@@ -45,6 +46,7 @@ const App = () => {
           </Routes>
         </Router>
       </UserProvider>
+      <ToastContainer />
 
       {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />

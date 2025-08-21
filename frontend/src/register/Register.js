@@ -3,7 +3,7 @@ import "./Register.css";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export const Register = () => {
@@ -47,7 +47,9 @@ export const Register = () => {
         );
         console.log("response--", response.data.data);
         if (response?.status === 201) {
-          navigate("/login");
+          navigate("/login", {
+            state: { showRegisterToast: "Registered Successfully" },
+          });
         }
       } catch (error) {
         const serverError = error.response.data;
@@ -186,6 +188,9 @@ export const Register = () => {
         >
           Register
         </button>
+        <Link className="linkfp" to={"/login"}>
+          Login
+        </Link>
       </form>
     </div>
   );

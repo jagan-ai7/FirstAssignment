@@ -5,9 +5,9 @@ import { Link } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { socket } from "../socket";
 import { UserContext } from "../UserContext";
-import {toast, ToastContainer} from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 
-export const Welcome = () => {
+export const Welcome = ({ updateFriendsList }) => {
   const { users, token, user, setToken } = useContext(UserContext);
   const [userName, setUserName] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -30,56 +30,139 @@ export const Welcome = () => {
     }
   };
 
+  const fetchFriendsAndRequests = async () => {
+    if (!user?.userId) return;
+
+    try {
+      // Fetch friends
+      const friendsResponse = await axios.get(
+        `http://localhost:5000/users/${user.userId}/friends`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setFriendsList(friendsResponse.data.data || []);
+      updateFriendsList(friendsResponse.data.data || []);
+
+      // Fetch friend requests (incoming + sent)
+      const requestsResponse = await axios.get(
+        `http://localhost:5000/users/${user.userId}/friend-requests`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { incoming, sent } = requestsResponse.data.data || {
+        incoming: [],
+        sent: [],
+      };
+      setIncomingRequests(incoming);
+      setSentRequests(sent);
+    } catch (error) {
+      console.error("Failed to fetch friends/requests", error);
+    }
+  };
+
   useEffect(() => {
     if (user?.userId) {
+      fetchFriendsAndRequests();
       socket.emit("login", user.userId);
     }
-  }, [user]);
+  }, [user?.userId]);
 
   useEffect(() => {
     fetchUser();
   }, []);
 
   useEffect(() => {
-  if (!user?.userId) return;
-  console.log("📡 Listening for socket events...");
+    if (!socket) return;
 
-  socket.on("friend_request_received", async ({ fromUserId }) => {
-     console.log("📥 Friend request received from:", fromUserId);
-    setIncomingRequests((prev) =>
-      prev.includes(fromUserId) ? prev : [...prev, fromUserId]
-    );
-  });
+    const handleError = ({ message }) => {
+      toast.warn(message);
+    };
 
-  socket.on("friend_request_accepted", async ({ userId }) => {
-    console.log("✅ Friend request accepted by:", userId);
-    toast.success(`Friend request accepted by user ${userId}`);
-    setSentRequests((prev) => prev.filter((id) => id !== userId));
-    setFriendsList((prev) => [...prev, userId]);
-  });
+    socket.on("error_message", handleError);
 
-  socket.on("friend_request_denied", async ({ userId }) => {
-    console.log("🚫 Friend request denied by:", userId);
-    toast.error(`Friend request denied by user ${userId}`);
-    setSentRequests((prev) => prev.filter((id) => id !== userId));
-  });
+    return () => {
+      socket.off("error_message", handleError);
+    };
+  }, []);
 
-  return () => {
-    socket.off("friend_request_received");
-    socket.off("friend_request_accepted");
-    socket.off("friend_request_denied");
-  };
-}, [user]);
+  useEffect(() => {
+    if (!user?.userId) return;
 
+    const handleRequestReceived = ({ fromUserId }) => {
+      if (fromUserId === user.userId) return;
+      setIncomingRequests((prev) =>
+        prev.includes(fromUserId) ? prev : [...prev, fromUserId]
+      );
+    };
 
+    const handleRequestSentConfirmation = ({ toUserId }) => {
+      setSentRequests((prev) =>
+        prev.includes(toUserId) ? prev : [...prev, toUserId]
+      );
+      toast.success("Friend request sent!");
+    };
+
+    const handleRequestAccepted = ({ userId }) => {
+      const acceptedUser = users.find((u) => u.id === userId);
+      const fullName = acceptedUser
+        ? `${acceptedUser.firstName} ${acceptedUser.lastName}`
+        : `User ${userId}`;
+
+      toast.success(`${fullName} accepted your friend request.`);
+      setSentRequests((prev) => prev.filter((id) => id !== userId));
+      setFriendsList((prev) => {
+        const newList = [...prev, userId];
+        updateFriendsList(newList); // Notify parent of update
+        return newList;
+      });
+    };
+
+    const handleRequestAcceptedByYou = ({ userId }) => {
+      const acceptedUser = users.find((u) => u.id === userId);
+      const fullName = acceptedUser
+        ? `${acceptedUser.firstName} ${acceptedUser.lastName}`
+        : `User ${userId}`;
+
+      toast.success(`${fullName} accepted your friend request.`);
+      setIncomingRequests((prev) => prev.filter((id) => id !== userId));
+      setFriendsList((prev) => {
+        const newList = prev.includes(userId) ? prev : [...prev, userId];
+        updateFriendsList(newList);
+        return newList;
+      });
+    };
+
+    const handleRequestDenied = ({ userId }) => {
+      const deniedUser = users.find((u) => u.id === userId);
+      const fullName = deniedUser
+        ? `${deniedUser.firstName} ${deniedUser.lastName}`
+        : `User ${userId}`;
+
+      toast.error(`${fullName} denied your friend request.`);
+      setSentRequests((prev) => prev.filter((id) => id !== userId));
+    };
+
+    socket.on("friend_request_sent", handleRequestSentConfirmation);
+    socket.on("friend_request_received", handleRequestReceived);
+    socket.on("friend_request_accepted", handleRequestAccepted);
+    socket.on("friend_request_accepted_by_you", handleRequestAcceptedByYou);
+    socket.on("friend_request_denied", handleRequestDenied);
+
+    return () => {
+      socket.off("friend_request_received", handleRequestReceived);
+      socket.off("friend_request_accepted", handleRequestAccepted);
+      socket.off("friend_request_accepted_by_you", handleRequestAcceptedByYou);
+      socket.off("friend_request_denied", handleRequestDenied);
+      socket.off("friend_request_sent", handleRequestSentConfirmation);
+    };
+  }, [user?.userId]);
 
   const addFriend = (toUserId) => {
     if (!user?.userId) return toast.info("Please login first.");
+
     if (sentRequests.includes(toUserId) || friendsList.includes(toUserId))
       return;
+
     socket.emit("send_friend_request", { fromUserId: user.userId, toUserId });
     setSentRequests((prev) => [...prev, toUserId]);
-    toast.success("Friend request sent!");
   };
 
   const acceptRequest = (fromUserId) => {
@@ -116,7 +199,6 @@ export const Welcome = () => {
           {userName}
         </h2>
 
-        {/* Add Friend Button */}
         <div
           style={{
             marginLeft: "auto",
@@ -130,7 +212,6 @@ export const Welcome = () => {
           </button>
         </div>
 
-        {/* Menu Popup */}
         <Popup
           trigger={<button className="popup-btn">Menu</button>}
           contentStyle={{
@@ -193,49 +274,7 @@ export const Welcome = () => {
         </button>
 
         <h3>Add a Friend</h3>
-        {/* Incoming Friend Requests */}
-        {/* {incomingRequests.length > 0 && (
-          <div
-            style={{
-              backgroundColor: "#f4f4f4",
-              padding: "10px",
-              borderRadius: "5px",
-              maxWidth: "300px",
-              margin: "10px",
-            }}
-          >
-            <h4>Incoming Friend Requests</h4>
-            {incomingRequests.map((reqId) => {
-              const u = users.find((u) => u.id === reqId);
-              return (
-                <div
-                  key={reqId}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderBottom: "1px solid #ccc",
-                    paddingBottom: "4px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <span>{`${u?.firstName || "User"} ${
-                    u?.lastName || ""
-                  }`}</span>
-                  <div>
-                    <button
-                      onClick={() => acceptRequest(reqId)}
-                      style={{ marginRight: "8px" }}
-                    >
-                      Accept
-                    </button>
-                    <button onClick={() => denyRequest(reqId)}>Deny</button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )} */}
+
         {users
           .filter((u) => u.id !== user?.userId)
           .map((u) => {
@@ -290,7 +329,7 @@ export const Welcome = () => {
           }}
         />
       )}
-      <ToastContainer/>
+      <ToastContainer />
     </>
   );
 };
