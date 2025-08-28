@@ -42,9 +42,7 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // ✅ Fetch users when token changes
-  useEffect(() => {
-    const fetchUsers = async () => {
+  const fetchUsers = async () => {
       if (!token) {
         setUsers([]);
         setLoading(false);
@@ -68,6 +66,8 @@ export const UserProvider = ({ children }) => {
       }
     };
 
+  // ✅ Fetch users when token changes
+  useEffect(() => {
     fetchUsers();
   }, [token]);
 

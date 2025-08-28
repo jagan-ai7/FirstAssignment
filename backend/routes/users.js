@@ -3,6 +3,8 @@ const router = express.Router();
 const { User, Friend, FriendRequest, Message } = require("../models");
 const Otp = require("../models/otp");
 const bcrypt = require("bcrypt");
+const multer = require("multer");
+const path = require("path");
 // const { createMessage } = require("../controllers/messageController");
 const {
   userSchema,
@@ -11,6 +13,7 @@ const {
 const jwt = require("jsonwebtoken");
 const transporter = require("../services/emailService");
 const { Op } = require("sequelize");
+const { io } = require("../server");
 
 require("dotenv").config();
 const SECRET_KEY = process.env.SECRET;
@@ -54,6 +57,8 @@ router.post("/register", async (req, res) => {
       email,
       password: hashPassword,
     });
+
+    // io.emit("users_update"); 
     res.status(201).json({
       statusCode: 201,
       message: "User Created Successfully",
@@ -71,12 +76,9 @@ router.post("/register", async (req, res) => {
 const login = async (email, plainPassword) => {
   try {
     const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return { statusCode: 401, success: false, message: "No user found" };
-    }
     const isMatch = await bcrypt.compare(plainPassword, user.password);
-    if (!isMatch) {
-      return { statusCode: 401, success: false, message: "Invalid Password" };
+    if (!user || !isMatch) {
+      return { statusCode: 401, success: false, message: "Invalid Credentials" };
     }
     return { statusCode: 200, success: true, user };
   } catch (error) {
@@ -111,6 +113,15 @@ router.post("/login", async (req, res) => {
       SECRET_KEY,
       { expiresIn: "1d" }
     );
+
+    //  // Fetch all users from DB
+    // const allUsers = await User.findAll({
+    //   attributes: ["id", "email"], // pick fields you want to send
+    // });
+
+    // console.log('Users===========', allUsers)
+    // // Emit updated user list to all connected clients
+    // io.emit("users_updated", allUsers);
 
     return res.status(200).json({
       statusCode: 200,
@@ -495,14 +506,7 @@ router.post("/user-skills", verifyToken, async (req, res) => {
 
 router.get("/get-users", verifyToken, async (req, res) => {
   try {
-    const users = await User.findAll({
-      where: {
-        id: {
-          [Op.ne]: req?.user?.userId,
-        },
-      },
-    });
-    console.log();
+    const users = await User.findAll();
     // try {
     //   const users = await User.findAll();
     //   // const userIds = users.map(user => user.id);
@@ -561,6 +565,8 @@ router.delete("/delete-user/:id", verifyToken, async (req, res) => {
   }
 });
 
+//-------------------------------Get Friends------------------------------
+
 router.get("/:userId/friends", async (req, res) => {
   const { userId } = req.params;
   if (!userId) {
@@ -589,6 +595,8 @@ router.get("/:userId/friends", async (req, res) => {
       .json({ statusCode: 500, error: "Failed to fetch friends.", data: "" });
   }
 });
+
+//------------------------------Get Friend Request-----------------------
 
 router.get("/:userId/friend-requests", async (req, res) => {
   const { userId } = req.params;
@@ -627,7 +635,7 @@ router.get("/:userId/friend-requests", async (req, res) => {
   }
 });
 
-// GET /messages/:userId/:friendId
+//---------------------------GET /messages/:userId/:friendId----------------------
 router.get("/messages/:userId/:friendId", async (req, res) => {
   const { userId, friendId } = req.params;
 
@@ -647,6 +655,29 @@ router.get("/messages/:userId/:friendId", async (req, res) => {
     console.error("Error fetching messages:", error);
     res.status(500).json({ success: false, message: "Failed to fetch messages." });
   }
+});
+
+//------------------------Upload Image-------------------------
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Make sure this folder exists or create it at server start
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); // unique filename
+  },
+});
+
+const upload = multer({ storage });
+
+// POST /upload - handle image upload
+router.post("/upload", upload.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ statusCode: 400, error: "No file uploaded", data: '' });
+  }
+
+  // Return the public URL path for the uploaded image
+  res.status(200).json({ statusCode: 200, success: true, imageUrl: `/uploads/${req.file.filename}` });
 });
 
 module.exports = router;

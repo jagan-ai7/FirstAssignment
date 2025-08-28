@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { socket } from "../socket";
 import { UserContext } from "../UserContext";
-import {toast, ToastContainer} from "react-toastify";
+import {toast } from "react-toastify";
 
 export const Welcome = () => {
   const { users, token, user, setToken } = useContext(UserContext);
@@ -290,7 +290,6 @@ export const Welcome = () => {
           }}
         />
       )}
-      <ToastContainer/>
     </>
   );
 };

@@ -13,6 +13,22 @@
 .chat-input:focus {
   outline: none;
 }
+
+.image-btn {
+  border-radius: 5px;
+  color: white;
+  background-color: transparent;
+  border: none;
+}
+
+.image-btn:hover {
+  transform: scale(1.1);
+}
+
+.image-btn:active {
+  transform: scale(0.8);
+}
+
 .chat-btn {
   border-radius: 5px;
   color: white;

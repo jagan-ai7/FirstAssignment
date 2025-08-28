@@ -4,7 +4,7 @@ import * as Yup from "yup";
 import axios from "axios";
 import "../register/Register.css";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 
 export const OtpVerification = () => {
   const navigate = useNavigate();
@@ -85,7 +85,6 @@ export const OtpVerification = () => {
             Submit
           </button>
         </form>
-        <ToastContainer />
       </div>
     </>
   );

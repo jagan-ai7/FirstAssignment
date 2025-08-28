@@ -3,7 +3,7 @@ import "../register/Register.css";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import * as Yup from "yup";
 
 export const ResetPassword = () => {
@@ -135,7 +135,6 @@ export const ResetPassword = () => {
           </button>
         )}
       </form>
-      <ToastContainer />
     </div>
   ) : (
     <p>{message || "Validating reset link..."}</p>

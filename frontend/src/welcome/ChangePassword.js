@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 
 export const ChangePassword = () => {
   const [showNew, setShowNew] = useState(false);
@@ -183,7 +183,6 @@ export const ChangePassword = () => {
           {loading ? "...Changing..." : "Change"}
         </button>
       </form>
-      <ToastContainer />
     </div>
   );
 };

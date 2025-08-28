@@ -2,7 +2,7 @@ import axios from "axios";
 import "../register/Register.css";
 import { useFormik } from "formik";
 import { useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import * as Yup from "yup";
 
 export const ForgotPassword = () => {
@@ -75,7 +75,6 @@ export const ForgotPassword = () => {
           </button>
         )}
       </form>
-      <ToastContainer />
     </div>
   );
 };

@@ -1,11 +1,18 @@
 import axios from "axios";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useInsertionEffect, useState } from "react";
 import "../register/Register.css";
 import { Link } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { socket } from "../socket";
 import { UserContext } from "../UserContext";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  increment,
+  decrement,
+  incrementByAmount,
+} from "../redux/slice/counterSlice";
+import { useNavigate } from "react-router-dom";
 
 export const Welcome = ({ updateFriendsList }) => {
   const { users, token, user, setToken } = useContext(UserContext);
@@ -14,6 +21,11 @@ export const Welcome = ({ updateFriendsList }) => {
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
+  const count = useSelector((state) => state.counter.value);
+  const dispatch = useDispatch();
+
+  const navigate = useNavigate();
+  console.log("user------",users)
 
   const fetchUser = async () => {
     try {
@@ -29,6 +41,8 @@ export const Welcome = ({ updateFriendsList }) => {
       console.error("Access denied:", error.response?.data.error);
     }
   };
+
+  console.log("User-----------", user?.userId);
 
   const fetchFriendsAndRequests = async () => {
     if (!user?.userId) return;
@@ -64,6 +78,20 @@ export const Welcome = ({ updateFriendsList }) => {
       socket.emit("login", user.userId);
     }
   }, [user?.userId]);
+
+  //   useEffect(() => {
+  //   // Handler receives the full users list from the server
+  //   const handleUsersUpdate = (updatedUsers) => {
+  //     console.log("🔁 Received users_update with users:", updatedUsers);
+  //     fetchFriendsAndRequests();
+  //   };
+
+  //   socket.on("users_updated", handleUsersUpdate);
+
+  //   return () => {
+  //     socket.off("users_updated", handleUsersUpdate);
+  //   };
+  // }, []);
 
   useEffect(() => {
     fetchUser();
@@ -101,10 +129,15 @@ export const Welcome = ({ updateFriendsList }) => {
     };
 
     const handleRequestAccepted = ({ userId }) => {
+      console.log("userId-------------", userId);
       const acceptedUser = users.find((u) => u.id === userId);
+      console.log("acceptedUser-------------", acceptedUser);
+
       const fullName = acceptedUser
         ? `${acceptedUser.firstName} ${acceptedUser.lastName}`
         : `User ${userId}`;
+
+      console.log("accepted-------------", acceptedUser);
 
       toast.success(`${fullName} accepted your friend request.`);
       setSentRequests((prev) => prev.filter((id) => id !== userId));
@@ -120,8 +153,6 @@ export const Welcome = ({ updateFriendsList }) => {
       const fullName = acceptedUser
         ? `${acceptedUser.firstName} ${acceptedUser.lastName}`
         : `User ${userId}`;
-
-      toast.success(`${fullName} accepted your friend request.`);
       setIncomingRequests((prev) => prev.filter((id) => id !== userId));
       setFriendsList((prev) => {
         const newList = prev.includes(userId) ? prev : [...prev, userId];
@@ -176,6 +207,16 @@ export const Welcome = ({ updateFriendsList }) => {
     setIncomingRequests((prev) => prev.filter((id) => id !== fromUserId));
   };
 
+  const ChangePassword = () => {
+    navigate("/changepassword");
+  };
+
+  const Logout = () => {
+    localStorage.clear();
+    setToken("");
+    navigate("/login");
+  };
+
   return (
     <>
       {/* HEADER */}
@@ -215,29 +256,32 @@ export const Welcome = ({ updateFriendsList }) => {
         <Popup
           trigger={<button className="popup-btn">Menu</button>}
           contentStyle={{
+            borderRadius: "5px",
+            width: "180px",
             display: "flex",
             flexDirection: "column",
             border: "none",
-            borderRadius: "5px",
+            overflow: "hidden",
           }}
           overlayStyle={{ background: "rgba(0,0,0,0.4)" }}
         >
-          <span className="popup-itm">
-            <Link className="linkfp" to={"/changepassword"}>
-              Change Password
-            </Link>
+          <span
+            className="popup-itm"
+            onClick={(e) => {
+              e.preventDefault();
+              ChangePassword();
+            }}
+          >
+            Change Password
           </span>
-          <span className="popup-itm">
-            <Link
-              className="linkfp"
-              to={"/login"}
-              onClick={() => {
-                localStorage.clear();
-                setToken("");
-              }}
-            >
-              Logout
-            </Link>
+          <span
+            className="popup-itm"
+            onClick={(e) => {
+              e.preventDefault();
+              Logout();
+            }}
+          >
+            Logout
           </span>
         </Popup>
       </div>
@@ -313,6 +357,10 @@ export const Welcome = ({ updateFriendsList }) => {
               </div>
             );
           })}
+        <h1>Count: {count}</h1>
+        <button onClick={() => dispatch(increment())}>+</button>
+        <button onClick={() => dispatch(decrement())}>-</button>
+        <button onClick={() => dispatch(incrementByAmount(5))}>+5</button>
       </div>
 
       {isSidebarOpen && (
@@ -329,7 +377,6 @@ export const Welcome = ({ updateFriendsList }) => {
           }}
         />
       )}
-      <ToastContainer />
     </>
   );
 };

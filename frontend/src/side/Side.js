@@ -7,7 +7,6 @@ export const Side = ({ friends=[], onSelectUser }) => {
 
   // Filter users to show only friends
   const friendsToShow = users.filter((user) => friends.includes(user.id));
-  console.log('users-------',users);
 
   return (
     <>

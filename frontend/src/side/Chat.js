@@ -3,6 +3,7 @@ import axios from "axios";
 import { socket } from "../socket.js";
 import "./Chat.css";
 import { UserContext } from "../UserContext.js";
+import { toast } from "react-toastify";
 
 export const Chat = ({ selectedId }) => {
   const { user, token } = useContext(UserContext);
@@ -14,6 +15,7 @@ export const Chat = ({ selectedId }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState({});
   const [friends, setFriends] = useState([]); // Friends fetched from backend
+
   // Fetch friends
   useEffect(() => {
     if (!userId || !token) return;
@@ -60,59 +62,63 @@ export const Chat = ({ selectedId }) => {
     fetchUser();
   }, [id, token]);
 
+  // Fetch chat messages between users
   useEffect(() => {
-  const fetchMessages = async () => {
-    if (!userId || !toId || !token) return;
+    const fetchMessages = async () => {
+      if (!userId || !toId || !token) return;
 
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/users/messages/${userId}/${toId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/users/messages/${userId}/${toId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-      const loadedMessages = response.data.data.map((msg) => ({
-        from: msg.fromId,
-        to: msg.toId,
-        message: msg.content, // 👈 from DB
-        id: msg.id,
-        timestamp: msg.createdAt,
-      }));
+        const loadedMessages = response.data.data.map((msg) => ({
+          from: msg.fromId,
+          to: msg.toId,
+          message: msg.content, // message content
+          type: msg.type || "text", // added to support type for images
+          id: msg.id,
+          timestamp: msg.createdAt,
+        }));
 
-      setMessages((prev) => ({
-        ...prev,
-        [toId]: loadedMessages,
-      }));
-    } catch (error) {
-      console.error("Failed to fetch chat history:", error);
-    }
-  };
+        setMessages((prev) => ({
+          ...prev,
+          [toId]: loadedMessages,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+      }
+    };
 
-  fetchMessages();
-}, [userId, toId, token]);
-
+    fetchMessages();
+  }, [userId, toId, token]);
 
   // Check if selected user is a friend
   const isFriend = friends.includes(id);
 
-  // Add new message to chat
+  // Add new message to chat state
   const addMessage = (newMsg) => {
-    console.log('NewMSG=========', newMsg);
-  const from = newMsg.fromId;
-  const to = newMsg.toId;
-  const message = newMsg.message;
-  const id = newMsg.id || null;
-  const timestamp = newMsg.timestamp || newMsg.createdAt || null;
+    const from = newMsg.fromId || newMsg.from;
+    const to = newMsg.toId || newMsg.to;
+    const message = newMsg.message;
+    const type = newMsg.type || "text";
+    const id = newMsg.id || null;
+    const timestamp = newMsg.timestamp || newMsg.createdAt || null;
 
-  const otherUserId = from?.toString() === userId ? to?.toString() : from?.toString();
+    const otherUserId =
+      from?.toString() === userId ? to?.toString() : from?.toString();
 
-  setMessages(prev => ({
-    ...prev,
-    [otherUserId]: [...(prev[otherUserId] || []), { from, to, message, id, timestamp }],
-  }));
-};
-
+    setMessages((prev) => ({
+      ...prev,
+      [otherUserId]: [
+        ...(prev[otherUserId] || []),
+        { from, to, message, type, id, timestamp },
+      ],
+    }));
+  };
 
   // Socket listeners
   useEffect(() => {
@@ -121,7 +127,7 @@ export const Chat = ({ selectedId }) => {
     };
 
     const handleError = ({ message }) => {
-      alert(message);
+      toast.error(message);
     };
 
     socket.on("private_message", handlePrivateMessage);
@@ -133,10 +139,10 @@ export const Chat = ({ selectedId }) => {
     };
   }, [userId]);
 
-  // Send a new message
+  // Send a new text message
   const sendMessage = () => {
     if (!isFriend) {
-      console.log("You can only message your friends.");
+      toast.error("You can only message your friends.");
       return;
     }
 
@@ -145,12 +151,65 @@ export const Chat = ({ selectedId }) => {
         fromId: userId,
         toId: toId,
         message: message.trim(),
+        type: "text",
       };
       socket.emit("private_message", newMsg);
-      addMessage(newMsg);
+      // REMOVE addMessage(newMsg);
       setMessage("");
     }
   };
+
+  // ======== NEW: Hidden file input for image upload =========
+  // This input is triggered programmatically by sendImage()
+  // Do not remove, otherwise image upload breaks
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !userId || !toId) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/users/upload", // Your image upload API route
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      const imageUrl = response.data?.imageUrl;
+
+      // In handleFileUpload after successful upload
+      if (imageUrl) {
+        const imageMsg = {
+          fromId: userId,
+          toId: toId,
+          message: imageUrl,
+          type: "image",
+        };
+
+        socket.emit("private_message", imageMsg);
+      }
+    } catch (err) {
+      console.error("❌ Image upload failed:", err);
+      toast.error("Failed to upload image.");
+    }
+
+    // Reset the file input value so same file can be selected again if needed
+    e.target.value = null;
+  };
+
+  const sendImage = () => {
+    if (!isFriend) {
+      toast.error("❌ You can only send images to friends.");
+      return;
+    }
+    const fileInput = document.getElementById("image-upload");
+    fileInput.click();
+  };
+  // ======== END NEW code for image upload ================
 
   const chatMessages = messages[toId] || [];
 
@@ -164,6 +223,15 @@ export const Chat = ({ selectedId }) => {
         overflow: "hidden",
       }}
     >
+      {/* Hidden file input for image upload */}
+      <input
+        type="file"
+        id="image-upload"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileUpload}
+      />
+
       {selectedId ? (
         <>
           <div style={{ display: "flex" }}>
@@ -214,7 +282,17 @@ export const Chat = ({ selectedId }) => {
                       margin: "8px 0",
                     }}
                   >
-                    <span>{msg.message}</span>
+                    {/* ===== Modified here to show image if type==="image" ===== */}
+                    {msg.type === "image" ? (
+                      <img
+                        src={`http://localhost:5000${msg.message}`}
+                        alt="Sent"
+                        style={{ maxWidth: "200px", borderRadius: "10px" }}
+                      />
+                    ) : (
+                      <span>{msg.message}</span>
+                    )}
+                    {/* ======================================================= */}
                   </div>
                 </div>
               );
@@ -233,6 +311,22 @@ export const Chat = ({ selectedId }) => {
               value={message}
               disabled={!isFriend}
             />
+            {/* ===== New button to send image ===== */}
+            <button
+              className="image-btn"
+              onClick={(e) => {
+                e.preventDefault();
+                sendImage();
+              }}
+              disabled={!isFriend}
+            >
+              <img
+                src="/images/pictureSend.png"
+                alt="ImgSend"
+                style={{ width: "35px", height: "30px" }}
+              />
+            </button>
+
             <button
               className="chat-btn"
               onClick={(e) => {

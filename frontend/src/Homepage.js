@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Multiselect } from "multiselect-react-dropdown";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "./Homepage.css";
 
 export const Homepage = () => {

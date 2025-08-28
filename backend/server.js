@@ -5,8 +5,9 @@ const http = require("http");
 const cors = require("cors");
 const sequelize = require("./config/database");
 const userRoutes = require("./routes/users");
-const { User, FriendRequest, Friend, Message } = require("./models");
+const { FriendRequest, Friend, Message } = require("./models");
 const { Op } = require("sequelize");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -19,7 +20,14 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.use(cors());
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads")),
+  userRoutes
+);
 app.use("/users", userRoutes);
+
+module.exports = { io };
 
 const PORT = process.env.PORT || 5000;
 
@@ -28,7 +36,7 @@ const usersOnline = {}; // userId => socket.id
 io.on("connection", (socket) => {
   console.log("📡 User connected:", socket.id);
 
-  socket.on("login", async (userId) => {
+  socket.on("login", (userId) => {
     usersOnline[userId] = socket.id;
     console.log(`✅ User ${userId} logged in via socket`);
     io.emit("users_update", Object.keys(usersOnline));
@@ -127,6 +135,8 @@ io.on("connection", (socket) => {
         { userId: toUserId, friendId: fromUserId },
         { userId: fromUserId, friendId: toUserId },
       ]);
+
+      console.log("toUserId----------", toUserId);
       const senderSocket = usersOnline[fromUserId];
       if (senderSocket) {
         io.to(senderSocket).emit("friend_request_accepted", {
@@ -155,37 +165,46 @@ io.on("connection", (socket) => {
   });
 
   // ✅ Private Messaging (only if friends)
-  socket.on("private_message", async ({ fromId, toId, message }) => {
-    const isFriend = await Friend.findOne({
-      where: { userId: fromId, friendId: toId },
-    });
+  socket.on("private_message", async ({ fromId, toId, message, type }) => {
+    try {
+      const isFriend = await Friend.findOne({
+        where: { userId: fromId, friendId: toId },
+      });
 
-    if (!isFriend) {
-      const senderSocket = usersOnline[fromId];
-      if (senderSocket) {
-        io.to(senderSocket).emit("error_message", {
-          message: "❌ You can only message friends.",
-        });
+      if (!isFriend) {
+        const senderSocket = usersOnline[fromId];
+        if (senderSocket) {
+          io.to(senderSocket).emit("error_message", {
+            message: "❌ You can only message friends.",
+          });
+        }
+        return;
       }
-      return;
-    }
 
-    const saved = await Message.create({
-      fromId,
-      toId,
-      content: message,
-      type: "text",
-    });
+      const saved = await Message.create({
+        fromId,
+        toId,
+        content: message,
+        type: type || "text",
+      });
 
-    const recipientSocket = usersOnline[toId];
-    if (recipientSocket) {
-      io.to(recipientSocket).emit("private_message", {
+      const payload = {
         fromId,
         toId,
         message: saved.content,
+        type: saved.type,
         id: saved.id,
         timestamp: saved.createdAt,
-      });
+      };
+
+      const senderSocket = usersOnline[fromId];
+      const recipientSocket = usersOnline[toId];
+
+      if (senderSocket) io.to(senderSocket).emit("private_message", payload);
+      if (recipientSocket)
+        io.to(recipientSocket).emit("private_message", payload);
+    } catch (err) {
+      console.error("Error sending private message:", err);
     }
   });
 
@@ -200,6 +219,7 @@ io.on("connection", (socket) => {
     }
   });
 });
+
 
 // Sync the database
 sequelize

@@ -5,8 +5,8 @@ import * as Yup from "yup";
 import axios from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import { useContext, useEffect } from "react";
+import { toast } from "react-toastify";
+import { useContext } from "react";
 import { UserContext } from "../UserContext";
 
 export const Login = () => {

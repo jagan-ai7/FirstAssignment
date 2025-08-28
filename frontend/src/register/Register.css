@@ -162,8 +162,15 @@
 
 .popup-itm {
   background-color: #e9f4fe;
-  padding: 8px;
+  padding: 10px;
   cursor: pointer;
+  text-align: left;
+  border: none;
+  display: flex;
+  align-items: center;
+  white-space: nowrap; /* prevent text from breaking to a new line */
+  overflow: hidden;
+  text-overflow: ellipsis; /* add ... if text still overflows */
 }
 
 .popup-btn {
