@@ -58,7 +58,6 @@ router.post("/register", async (req, res) => {
       password: hashPassword,
     });
 
-    // io.emit("users_update"); 
     res.status(201).json({
       statusCode: 201,
       message: "User Created Successfully",
@@ -113,15 +112,6 @@ router.post("/login", async (req, res) => {
       SECRET_KEY,
       { expiresIn: "1d" }
     );
-
-    //  // Fetch all users from DB
-    // const allUsers = await User.findAll({
-    //   attributes: ["id", "email"], // pick fields you want to send
-    // });
-
-    // console.log('Users===========', allUsers)
-    // // Emit updated user list to all connected clients
-    // io.emit("users_updated", allUsers);
 
     return res.status(200).json({
       statusCode: 200,

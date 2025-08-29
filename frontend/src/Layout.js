@@ -41,7 +41,7 @@ export const Layout = () => {
         }}
       >
         <Side friends={friendsList} onSelectUser={setSelectedId} />
-        <Chat selectedId={selectedId} />
+        <Chat friendList={friendsList} selectedId={selectedId} />
       </div>
     </div>
   );

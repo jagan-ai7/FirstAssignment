@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "../register/Register.css";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -7,21 +7,23 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useContext } from "react";
-import { UserContext } from "../UserContext";
+// import { UserContext } from "../UserContext";
+import { AuthContext } from "../contexts/AuthContext";
 
 export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { setToken } = useContext(UserContext);
+  // const { setToken } = useContext(UserContext);
+  const { setToken } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // useEffect(() => {
-  //   if (location.state?.showRegisterToast) {
-  //     toast.success(location.state.showRegisterToast);
-  //     navigate(location.pathname, { replace: true });
-  //   }
-  // }, [location, navigate]);
+  useEffect(() => {
+    if (location.state?.showRegisterToast) {
+      toast.success(location.state.showRegisterToast);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   // useEffect(() => {
   //   if (location.state?.toast) {

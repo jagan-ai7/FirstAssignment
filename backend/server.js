@@ -5,7 +5,7 @@ const http = require("http");
 const cors = require("cors");
 const sequelize = require("./config/database");
 const userRoutes = require("./routes/users");
-const { FriendRequest, Friend, Message } = require("./models");
+const { User, FriendRequest, Friend, Message } = require("./models");
 const { Op } = require("sequelize");
 const path = require("path");
 
@@ -36,10 +36,17 @@ const usersOnline = {}; // userId => socket.id
 io.on("connection", (socket) => {
   console.log("📡 User connected:", socket.id);
 
-  socket.on("login", (userId) => {
+  socket.on("login", async (userId) => {
     usersOnline[userId] = socket.id;
     console.log(`✅ User ${userId} logged in via socket`);
     io.emit("users_update", Object.keys(usersOnline));
+
+    // Fetch all users from DB
+    const allUsers = await User.findAll();
+
+    console.log('Users===========', allUsers)
+    // Emit updated user list to all connected clients
+    io.emit("users_updated", allUsers);
   });
 
   // ✅ Send Friend Request

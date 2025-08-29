@@ -1,9 +1,11 @@
 import "./Side.css";
 import { useContext } from "react";
-import { UserContext } from "../UserContext";
+// import { UserContext } from "../UserContext";
+import { UsersContext } from "../contexts/UsersContext";
 
 export const Side = ({ friends=[], onSelectUser }) => {
-  const { users } = useContext(UserContext);
+  // const { users } = useContext(UserContext);
+  const{ users } = useContext(UsersContext);
 
   // Filter users to show only friends
   const friendsToShow = users.filter((user) => friends.includes(user.id));

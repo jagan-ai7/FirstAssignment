@@ -1,12 +1,16 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { socket } from "../socket.js";
 import "./Chat.css";
-import { UserContext } from "../UserContext.js";
+// import { UserContext } from "../UserContext.js";
 import { toast } from "react-toastify";
+import { AuthContext } from "../contexts/AuthContext.js";
+import { CurrentUserContext } from "../contexts/CurrentUserContext.js";
 
-export const Chat = ({ selectedId }) => {
-  const { user, token } = useContext(UserContext);
+export const Chat = ({ friendList=[], selectedId }) => {
+  // const { user, token } = useContext(UserContext);
+  const { token } = useContext(AuthContext);
+  const { user } = useContext(CurrentUserContext);
   const userId = user?.userId?.toString();
   const id = selectedId?.toString(); // Ensure it's a string
 
@@ -36,6 +40,10 @@ export const Chat = ({ selectedId }) => {
 
     fetchFriends();
   }, [userId, token]);
+
+  useEffect(() => {
+  setFriends(friendList.map(String)); // Ensure all IDs are strings
+}, [friendList]);
 
   // Fetch selected user's details
   useEffect(() => {
@@ -154,7 +162,6 @@ export const Chat = ({ selectedId }) => {
         type: "text",
       };
       socket.emit("private_message", newMsg);
-      // REMOVE addMessage(newMsg);
       setMessage("");
     }
   };

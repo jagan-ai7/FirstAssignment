@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import { socket } from "./socket";
 
 export const UserContext = createContext({
   user: null,
@@ -70,6 +71,20 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     fetchUsers();
   }, [token]);
+
+  //   useEffect(() => {
+  //   // Handler receives the full users list from the server
+  //   const handleUsersUpdate = (updatedUsers) => {
+  //     console.log("🔁 Received users_update with users:", updatedUsers);
+  //     setUsers(updatedUsers);
+  //   };
+
+  //   socket.on("users_updated", handleUsersUpdate);
+
+  //   return () => {
+  //     socket.off("users_updated", handleUsersUpdate);
+  //   };
+  // }, [token]);
 
   if (loading) return <div>Loading context...</div>;
 

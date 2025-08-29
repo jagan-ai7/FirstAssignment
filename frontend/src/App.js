@@ -11,12 +11,10 @@ import { ForgotPassword } from "./login/ForgotPassword";
 import { ResetPassword } from "./login/ResetPassword";
 import { ChangePassword } from "./welcome/ChangePassword";
 import { Homepage } from "./Homepage";
-import { Side } from "./side/Side";
-import { Chat } from "./side/Chat";
 // import { Message } from "./message/Message";
 // import { MessageExample } from "./MessageExample";
 import { Layout } from "./Layout";
-import { UserProvider } from "./UserContext";
+// import { UserProvider } from "./UserContext";
 import { ToastContainer } from "react-toastify";
 import { Provider } from 'react-redux';
 
@@ -24,7 +22,6 @@ const App = () => {
   return (
     <div className="App">
 
-      <UserProvider>
         <Router>
           <Routes>
             <Route path="/register" element={<Register />} />
@@ -48,7 +45,6 @@ const App = () => {
           </Routes>
         </Router>
       <ToastContainer />
-      </UserProvider>
 
       {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />

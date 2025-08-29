@@ -1,10 +1,9 @@
 import axios from "axios";
-import { useContext, useEffect, useInsertionEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import "../register/Register.css";
-import { Link } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { socket } from "../socket";
-import { UserContext } from "../UserContext";
+// import { UserContext } from "../UserContext";
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -13,9 +12,15 @@ import {
   incrementByAmount,
 } from "../redux/slice/counterSlice";
 import { useNavigate } from "react-router-dom";
+import { UsersContext } from "../contexts/UsersContext";
+import { AuthContext } from "../contexts/AuthContext";
+import { CurrentUserContext } from "../contexts/CurrentUserContext";
 
 export const Welcome = ({ updateFriendsList }) => {
-  const { users, token, user, setToken } = useContext(UserContext);
+  // const { users, token, user, setToken } = useContext(UserContext);
+  const { token, setToken } = useContext(AuthContext);
+  const { user } = useContext(CurrentUserContext);
+  const { users } = useContext(UsersContext);
   const [userName, setUserName] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState([]);
@@ -25,7 +30,6 @@ export const Welcome = ({ updateFriendsList }) => {
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
-  console.log("user------",users)
 
   const fetchUser = async () => {
     try {
@@ -41,8 +45,6 @@ export const Welcome = ({ updateFriendsList }) => {
       console.error("Access denied:", error.response?.data.error);
     }
   };
-
-  console.log("User-----------", user?.userId);
 
   const fetchFriendsAndRequests = async () => {
     if (!user?.userId) return;
@@ -79,23 +81,15 @@ export const Welcome = ({ updateFriendsList }) => {
     }
   }, [user?.userId]);
 
-  //   useEffect(() => {
-  //   // Handler receives the full users list from the server
-  //   const handleUsersUpdate = (updatedUsers) => {
-  //     console.log("🔁 Received users_update with users:", updatedUsers);
-  //     fetchFriendsAndRequests();
-  //   };
-
-  //   socket.on("users_updated", handleUsersUpdate);
-
-  //   return () => {
-  //     socket.off("users_updated", handleUsersUpdate);
-  //   };
-  // }, []);
-
   useEffect(() => {
     fetchUser();
   }, []);
+
+  const getUserFullName = (id) => {
+  const userObj = users.find((u) => u.id === id);
+  return userObj ? `${userObj.firstName} ${userObj.lastName}` : `User ${id}`;
+};
+
 
   useEffect(() => {
     if (!socket) return;
@@ -129,45 +123,26 @@ export const Welcome = ({ updateFriendsList }) => {
     };
 
     const handleRequestAccepted = ({ userId }) => {
-      console.log("userId-------------", userId);
-      const acceptedUser = users.find((u) => u.id === userId);
-      console.log("acceptedUser-------------", acceptedUser);
 
-      const fullName = acceptedUser
-        ? `${acceptedUser.firstName} ${acceptedUser.lastName}`
-        : `User ${userId}`;
-
-      console.log("accepted-------------", acceptedUser);
-
-      toast.success(`${fullName} accepted your friend request.`);
+      toast.success(`${getUserFullName(userId)} accepted your friend request.`);
       setSentRequests((prev) => prev.filter((id) => id !== userId));
       setFriendsList((prev) => {
         const newList = [...prev, userId];
-        updateFriendsList(newList); // Notify parent of update
         return newList;
       });
     };
 
     const handleRequestAcceptedByYou = ({ userId }) => {
-      const acceptedUser = users.find((u) => u.id === userId);
-      const fullName = acceptedUser
-        ? `${acceptedUser.firstName} ${acceptedUser.lastName}`
-        : `User ${userId}`;
       setIncomingRequests((prev) => prev.filter((id) => id !== userId));
       setFriendsList((prev) => {
         const newList = prev.includes(userId) ? prev : [...prev, userId];
-        updateFriendsList(newList);
         return newList;
       });
     };
 
     const handleRequestDenied = ({ userId }) => {
-      const deniedUser = users.find((u) => u.id === userId);
-      const fullName = deniedUser
-        ? `${deniedUser.firstName} ${deniedUser.lastName}`
-        : `User ${userId}`;
 
-      toast.error(`${fullName} denied your friend request.`);
+      toast.error(`${getUserFullName(userId)} denied your friend request.`);
       setSentRequests((prev) => prev.filter((id) => id !== userId));
     };
 
@@ -184,7 +159,13 @@ export const Welcome = ({ updateFriendsList }) => {
       socket.off("friend_request_denied", handleRequestDenied);
       socket.off("friend_request_sent", handleRequestSentConfirmation);
     };
-  }, [user?.userId]);
+  }, [user?.userId, users]);
+
+  useEffect(() => {
+  if (updateFriendsList) {
+    updateFriendsList(friendsList);
+  }
+}, [friendsList]);
 
   const addFriend = (toUserId) => {
     if (!user?.userId) return toast.info("Please login first.");
