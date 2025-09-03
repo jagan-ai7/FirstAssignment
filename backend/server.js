@@ -4,8 +4,8 @@ const { Server } = require("socket.io");
 const http = require("http");
 const cors = require("cors");
 const sequelize = require("./config/database");
-const userRoutes = require("./routes/users");
-const { User, FriendRequest, Friend, Message } = require("./models");
+const createUserRoutes = require("./routes/users");
+const { FriendRequest, Friend, Message } = require("./models");
 const { Op } = require("sequelize");
 const path = require("path");
 
@@ -20,14 +20,10 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.use(cors());
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "uploads")),
-  userRoutes
-);
-app.use("/users", userRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-module.exports = { io };
+const userRoutes = createUserRoutes(io);
+app.use("/users", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 
@@ -41,12 +37,6 @@ io.on("connection", (socket) => {
     console.log(`✅ User ${userId} logged in via socket`);
     io.emit("users_update", Object.keys(usersOnline));
 
-    // Fetch all users from DB
-    const allUsers = await User.findAll();
-
-    console.log('Users===========', allUsers)
-    // Emit updated user list to all connected clients
-    io.emit("users_updated", allUsers);
   });
 
   // ✅ Send Friend Request
@@ -241,7 +231,6 @@ sequelize
     console.error("Error syncing the database:", error);
   });
 
-// socket.on('send_message', async (data) => {
 //   try {
 //     const { token, username, content } = data;
 

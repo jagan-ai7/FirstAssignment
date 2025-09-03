@@ -18,12 +18,12 @@ export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    if (location.state?.showRegisterToast) {
-      toast.success(location.state.showRegisterToast);
-      navigate(location.pathname, { replace: true });
-    }
-  }, [location, navigate]);
+  // useEffect(() => {
+  //   if (location.state?.showRegisterToast) {
+  //     toast.success(location.state.showRegisterToast);
+  //     navigate(location.pathname, { replace: true });
+  //   }
+  // }, [location, navigate]);
 
   // useEffect(() => {
   //   if (location.state?.toast) {
@@ -61,7 +61,9 @@ export const Login = () => {
         localStorage.setItem("id", id);
         console.log("User-----------", response);
         setToken(token);
-        navigate("/layout", { state: { showLoginToast: "Login Successful" } });
+        navigate("/layout");
+        // , { state: { showLoginToast: "Login Successful" } }
+        toast.success("Login Successfull")
 
         //------------------------------with otp---------------------------------
         // navigate('/verification')

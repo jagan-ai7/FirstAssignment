@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,9 +48,8 @@ export const Register = () => {
         );
         console.log("response--", response.data.data);
         if (response?.status === 201) {
-          navigate("/login", {
-            state: { showRegisterToast: "Registered Successfully" },
-          });
+          navigate("/login");
+          toast.success("Register Successfully");
         }
       } catch (error) {
         const serverError = error.response.data;

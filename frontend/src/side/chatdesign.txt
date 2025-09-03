@@ -1,0 +1,67 @@
+<div className="d-flex vh-100 bg-light">
+  {/* Sidebar */}
+  <aside className="bg-white border-end shadow-sm p-4 overflow-auto" style={{width: '25%'}}>
+    <h2 className="h4 text-primary mb-4">Chat App</h2>
+
+    <div className="d-flex flex-column gap-3">
+      {[{ name: 'Sam Bun', email: 'testbun72@gmail.com' }, { name: 'Tes1 Test', email: 'test@mail.com' }].map(user => (
+        <div
+          key={user.email}
+          className="p-3 bg-primary bg-opacity-10 rounded shadow-sm hover-bg-primary cursor-pointer"
+          style={{cursor: 'pointer'}}
+        >
+          <h3 className="fw-semibold text-dark">{user.name}</h3>
+          <p className="small text-secondary">{user.email}</p>
+        </div>
+      ))}
+    </div>
+  </aside>
+
+  {/* Main Chat Area */}
+  <main className="flex-grow-1 d-flex flex-column">
+    {/* Header */}
+    <header className="d-flex justify-content-between align-items-center bg-primary text-white px-4 py-2">
+      <h2 className="h5 fw-semibold mb-0">Tes1 Test</h2>
+      <div className="d-flex gap-3">
+        <button className="btn btn-link text-white p-0">Add Friend</button>
+        <button className="btn btn-link text-white p-0">Menu</button>
+      </div>
+    </header>
+
+    {/* Messages */}
+    <div className="flex-grow-1 overflow-auto p-4 bg-white">
+      {/* Received Message */}
+      <div className="d-flex mb-3">
+        <div className="bg-secondary text-dark px-3 py-2 rounded-3">hi</div>
+      </div>
+
+      {/* Image */}
+      <img
+        src="/uploads/your-image.png"
+        alt="uploaded"
+        className="img-thumbnail mb-3"
+        style={{width: '10rem'}}
+      />
+
+      {/* Sent Message */}
+      <div className="d-flex justify-content-end mb-3">
+        <div className="bg-primary text-white px-3 py-2 rounded-3">hlo'</div>
+      </div>
+    </div>
+
+    {/* Input */}
+    <footer className="d-flex align-items-center p-3 border-top bg-white">
+      <input
+        type="text"
+        placeholder="Type a message"
+        className="form-control rounded-pill me-3"
+      />
+      <div className="d-flex gap-3">
+        <button className="btn btn-outline-secondary p-2">
+          <img src="/icons/image-upload.svg" alt="Upload" style={{width: '1.5rem'}} />
+        </button>
+        <button className="btn btn-primary rounded-pill px-4 shadow-sm">Send</button>
+      </div>
+    </footer>
+  </main>
+</div>

@@ -16,7 +16,7 @@ import { UsersContext } from "../contexts/UsersContext";
 import { AuthContext } from "../contexts/AuthContext";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
 
-export const Welcome = ({ updateFriendsList }) => {
+export const Welcome = ({ updateFriendsList, onSelectUser }) => {
   // const { users, token, user, setToken } = useContext(UserContext);
   const { token, setToken } = useContext(AuthContext);
   const { user } = useContext(CurrentUserContext);
@@ -86,10 +86,9 @@ export const Welcome = ({ updateFriendsList }) => {
   }, []);
 
   const getUserFullName = (id) => {
-  const userObj = users.find((u) => u.id === id);
-  return userObj ? `${userObj.firstName} ${userObj.lastName}` : `User ${id}`;
-};
-
+    const userObj = users.find((u) => u.id === id);
+    return userObj ? `${userObj.firstName} ${userObj.lastName}` : `User ${id}`;
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -123,7 +122,6 @@ export const Welcome = ({ updateFriendsList }) => {
     };
 
     const handleRequestAccepted = ({ userId }) => {
-
       toast.success(`${getUserFullName(userId)} accepted your friend request.`);
       setSentRequests((prev) => prev.filter((id) => id !== userId));
       setFriendsList((prev) => {
@@ -141,7 +139,6 @@ export const Welcome = ({ updateFriendsList }) => {
     };
 
     const handleRequestDenied = ({ userId }) => {
-
       toast.error(`${getUserFullName(userId)} denied your friend request.`);
       setSentRequests((prev) => prev.filter((id) => id !== userId));
     };
@@ -162,10 +159,10 @@ export const Welcome = ({ updateFriendsList }) => {
   }, [user?.userId, users]);
 
   useEffect(() => {
-  if (updateFriendsList) {
-    updateFriendsList(friendsList);
-  }
-}, [friendsList]);
+    if (updateFriendsList) {
+      updateFriendsList(friendsList);
+    }
+  }, [friendsList]);
 
   const addFriend = (toUserId) => {
     if (!user?.userId) return toast.info("Please login first.");
@@ -201,41 +198,24 @@ export const Welcome = ({ updateFriendsList }) => {
   return (
     <>
       {/* HEADER */}
-      <div
-        style={{
-          display: "flex",
-          backgroundColor: "#032d5d",
-          color: "white",
-          border: "1px solid black",
-          borderRadius: "0 0 10px 10px",
-          justifyContent: "space-between",
-        }}
-      >
-        <h2
-          style={{
-            marginLeft: "40px",
-            fontFamily: "Times New Roman, Times, serif",
-            alignSelf: "center",
-          }}
-        >
-          {userName}
-        </h2>
+      <div className="navbar navbar-dark bg-dark px-4 d-flex justify-content-between align-items-center">
+        <h2 className="navbar-brand">{userName}</h2>
 
-        <div
-          style={{
-            marginLeft: "auto",
-            marginRight: "50px",
-            marginTop: "auto",
-            marginBottom: "auto",
-          }}
-        >
-          <button className="add-friend" onClick={() => setIsSidebarOpen(true)}>
+        <div className="ms-auto me-5 my-auto">
+          <button
+            class="btn btn-outline-light btn-sm me-2 add-friend"
+            onClick={() => setIsSidebarOpen(true)}
+          >
             Add Friend
           </button>
         </div>
 
         <Popup
-          trigger={<button className="popup-btn">Menu</button>}
+          trigger={
+            <button className="btn btn-outline-light btn-sm popup-btn">
+              Menu
+            </button>
+          }
           contentStyle={{
             borderRadius: "5px",
             width: "180px",
@@ -269,75 +249,94 @@ export const Welcome = ({ updateFriendsList }) => {
 
       {/* Sidebar */}
       <div
+        class="position-fixed top-0 end-0 vh-100 bg-white shadow p-3"
         style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          height: "100vh",
-          width: "300px",
-          backgroundColor: "#fff",
+          width: "380px",
           boxShadow: "-2px 0 5px rgba(0, 0, 0, 0.3)",
-          padding: "20px",
           transition: "transform 0.3s ease-in-out",
           transform: isSidebarOpen ? "translateX(0%)" : "translateX(100%)",
-          zIndex: 1000,
+          zIndex: "1000",
         }}
       >
         <button
           onClick={() => setIsSidebarOpen(false)}
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            fontSize: "20px",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-          }}
+          class="position-absolute top-0 end-0 bg-transparent border-0 fs-5"
         >
           ✖
         </button>
 
         <h3>Add a Friend</h3>
+        <div className=" overflow-y-auto addfriend-container">
+          {users
+            .filter((u) => u.id !== user?.userId)
+            .map((u) => {
+              const isIncoming = incomingRequests.includes(u.id);
+              const isSent = sentRequests.includes(u.id);
+              const isFriend = friendsList.includes(u.id);
 
-        {users
-          .filter((u) => u.id !== user?.userId)
-          .map((u) => {
-            const isIncoming = incomingRequests.includes(u.id);
-            const isSent = sentRequests.includes(u.id);
-            const isFriend = friendsList.includes(u.id);
-
-            return (
-              <div
-                key={u.id}
-                style={{
-                  borderBottom: "1px solid black",
-                  padding: "0 5px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  style={{ fontWeight: "bold" }}
-                >{`${u.firstName} ${u.lastName}`}</p>
-                {isFriend ? (
-                  <span style={{ color: "green" }}>Friend</span>
-                ) : isIncoming ? (
-                  <div style={{ display: "flex", gap: "5px" }}>
-                    <button onClick={() => acceptRequest(u.id)}>Accept</button>
-                    <button onClick={() => denyRequest(u.id)}>Deny</button>
-                  </div>
-                ) : isSent ? (
-                  <button disabled style={{ opacity: 0.6 }}>
-                    Requested
-                  </button>
-                ) : (
-                  <button onClick={() => addFriend(u.id)}>Add</button>
-                )}
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={u.id}
+                  class="d-flex justify-content-between align-items-center border-bottom p-2 mt-2"
+                >
+                  <p className="fw-bold m-0">{`${u.firstName} ${u.lastName}`}</p>
+                  {isFriend ? (
+                    // <span style={{ color: "green" }}>Friend</span>
+                    <button
+                      class="btn rounded border-0 border px-2 py-1 text-white message-btn"
+                      style={{
+                        backgroundColor: "#0158bb",
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onSelectUser(u.id);
+                        setIsSidebarOpen(false);
+                      }}
+                    >
+                      Message
+                    </button>
+                  ) : isIncoming ? (
+                    <div class="d-flex gap-3">
+                      <button
+                        class="p-0 border-0 accept-deny"
+                        onClick={() => acceptRequest(u.id)}
+                      >
+                        <img
+                          src="/images/check-mark.png"
+                          alt="ImgSend"
+                          style={{ width: "20px", height: "20px" }}
+                        />
+                      </button>
+                      <button
+                        class="p-0 border-0 accept-deny"
+                        onClick={() => denyRequest(u.id)}
+                      >
+                        <img
+                          src="/images/cross.png"
+                          alt="ImgSend"
+                          style={{ width: "17px", height: "17px" }}
+                        />
+                      </button>
+                    </div>
+                  ) : isSent ? (
+                    <button disabled style={{ opacity: 0.6 }}>
+                      Requested
+                    </button>
+                  ) : (
+                    <button
+                      class="btn rounded border-0 border px-2 py-1 text-white message-btn"
+                      style={{
+                        backgroundColor: "#0158bb",
+                      }}
+                      onClick={() => addFriend(u.id)}
+                    >
+                      Add
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+        </div>
         <h1>Count: {count}</h1>
         <button onClick={() => dispatch(increment())}>+</button>
         <button onClick={() => dispatch(decrement())}>-</button>
@@ -347,15 +346,8 @@ export const Welcome = ({ updateFriendsList }) => {
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.3)",
-            zIndex: 999,
-          }}
+          className="position-fixed top-0 start-0 w-100 h-100"
+          style={{ backgroundColor: "rgba(0,0,0,0.3)", zIndex: "999" }}
         />
       )}
     </>

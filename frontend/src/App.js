@@ -17,6 +17,7 @@ import { Layout } from "./Layout";
 // import { UserProvider } from "./UserContext";
 import { ToastContainer } from "react-toastify";
 import { Provider } from 'react-redux';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () => {
   return (

@@ -15,12 +15,12 @@ export const Layout = () => {
     setFriendsList(newFriends);
   };
 
-  useEffect(() => {
-    if (location.state?.showLoginToast) {
-      toast.success(location.state.showLoginToast);
-      navigate(location.pathname, { replace: true });
-    }
-  }, [location, navigate]);
+  // useEffect(() => {
+  //   if (location.state?.showLoginToast) {
+  //     toast.success(location.state.showLoginToast);
+  //     navigate(location.pathname, { replace: true });
+  //   }
+  // }, [location, navigate]);
 
   return (
     <div
@@ -31,7 +31,7 @@ export const Layout = () => {
         height: "100vh",
       }}
     >
-      <Welcome updateFriendsList={updateFriendsList} />
+      <Welcome updateFriendsList={updateFriendsList} onSelectUser={setSelectedId} />
       <div
         style={{
           display: "flex",

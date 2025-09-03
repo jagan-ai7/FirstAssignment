@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../contexts/AuthContext.js";
 import { CurrentUserContext } from "../contexts/CurrentUserContext.js";
 
-export const Chat = ({ friendList=[], selectedId }) => {
+export const Chat = ({ friendList = [], selectedId }) => {
   // const { user, token } = useContext(UserContext);
   const { token } = useContext(AuthContext);
   const { user } = useContext(CurrentUserContext);
@@ -19,6 +19,8 @@ export const Chat = ({ friendList=[], selectedId }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState({});
   const [friends, setFriends] = useState([]); // Friends fetched from backend
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // Fetch friends
   useEffect(() => {
@@ -42,8 +44,8 @@ export const Chat = ({ friendList=[], selectedId }) => {
   }, [userId, token]);
 
   useEffect(() => {
-  setFriends(friendList.map(String)); // Ensure all IDs are strings
-}, [friendList]);
+    setFriends(friendList.map(String)); // Ensure all IDs are strings
+  }, [friendList]);
 
   // Fetch selected user's details
   useEffect(() => {
@@ -147,6 +149,10 @@ export const Chat = ({ friendList=[], selectedId }) => {
     };
   }, [userId]);
 
+  useEffect(() => {
+    scrollDown();
+  }, [messages]);
+
   // Send a new text message
   const sendMessage = () => {
     if (!isFriend) {
@@ -169,16 +175,29 @@ export const Chat = ({ friendList=[], selectedId }) => {
   // ======== NEW: Hidden file input for image upload =========
   // This input is triggered programmatically by sendImage()
   // Do not remove, otherwise image upload breaks
-  const handleFileUpload = async (e) => {
+
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
-    if (!file || !userId || !toId) return;
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+
+    // Reset input so the same file can be selected again later
+    e.target.value = null;
+  };
+
+  const sendImageToServer = async () => {
+    if (!selectedFile || !userId || !toId) return;
 
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("image", selectedFile);
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/users/upload", // Your image upload API route
+        "http://localhost:5000/users/upload",
         formData,
         {
           headers: {
@@ -186,9 +205,9 @@ export const Chat = ({ friendList=[], selectedId }) => {
           },
         }
       );
+
       const imageUrl = response.data?.imageUrl;
 
-      // In handleFileUpload after successful upload
       if (imageUrl) {
         const imageMsg = {
           fromId: userId,
@@ -198,38 +217,46 @@ export const Chat = ({ friendList=[], selectedId }) => {
         };
 
         socket.emit("private_message", imageMsg);
+        toast.success("Image sent!");
+
+        // Clear preview
+        setPreviewUrl(null);
+        setSelectedFile(null);
       }
     } catch (err) {
-      console.error("❌ Image upload failed:", err);
+      console.error("Image upload failed:", err);
       toast.error("Failed to upload image.");
     }
+  };
 
-    // Reset the file input value so same file can be selected again if needed
-    e.target.value = null;
+  const cancelPreview = () => {
+    setPreviewUrl(null);
+    setSelectedFile(null);
+  };
+
+  const scrollDown = () => {
+    const container = document.getElementById("chat-container");
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+      });
+    }
   };
 
   const sendImage = () => {
     if (!isFriend) {
-      toast.error("❌ You can only send images to friends.");
+      toast.error("You can only send images to friends.");
       return;
     }
     const fileInput = document.getElementById("image-upload");
     fileInput.click();
   };
-  // ======== END NEW code for image upload ================
+  // ========== END NEW code for image upload ================
 
   const chatMessages = messages[toId] || [];
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        flexGrow: "9",
-        gap: "2px",
-        overflow: "hidden",
-      }}
-    >
+    <div className="flex-grow-1 d-flex flex-column">
       {/* Hidden file input for image upload */}
       <input
         type="file"
@@ -241,41 +268,28 @@ export const Chat = ({ friendList=[], selectedId }) => {
 
       {selectedId ? (
         <>
-          <div style={{ display: "flex" }}>
-            <h2
-              style={{
-                marginLeft: "30px",
-                fontFamily: "Times New Roman, Times, serif",
-                fontSize: "20px",
-              }}
-            >
-              {name}
-            </h2>
+          <div className="d-flex justify-content-between align-items-center bg-light text-dark px-4 py-2">
+            <h2 className="h5 fw-semibold mb-0 ms-3">{name}</h2>
           </div>
-          <hr style={{ width: "94%" }} />
+          <hr />
           <div
-            style={{
-              flexGrow: 9,
-              padding: "20px",
-              overflowY: "auto",
-              margin: "0px 10px",
-            }}
+            className="flex-grow-1 overflow-auto p-4 bg-white chat-container"
+            id="chat-container"
           >
             {chatMessages.map((msg, i) => {
               const isSender = msg.from?.toString() === userId;
               return (
                 <div
                   key={i}
+                  className="px-3 py-2 d-flex"
                   style={{
-                    display: "flex",
                     justifyContent: isSender ? "flex-end" : "flex-start",
-                    marginBottom: "8px",
                   }}
                 >
                   <div
                     style={{
-                      backgroundColor: isSender ? "#4A90E2" : "#d2d6da",
-                      color: isSender ? "#FFFFFF" : "#161f28",
+                      backgroundColor: isSender ? "#0069e5" : "#808080",
+                      color: isSender ? "#FFFFFF" : "#FFFFFF",
                       padding: "8px 12px",
                       borderRadius: isSender
                         ? "15px 0 15px 15px"
@@ -294,7 +308,8 @@ export const Chat = ({ friendList=[], selectedId }) => {
                       <img
                         src={`http://localhost:5000${msg.message}`}
                         alt="Sent"
-                        style={{ maxWidth: "200px", borderRadius: "10px" }}
+                        style={{ maxWidth: "150px", borderRadius: "10px" }}
+                        onLoad={scrollDown}
                       />
                     ) : (
                       <span>{msg.message}</span>
@@ -305,13 +320,47 @@ export const Chat = ({ friendList=[], selectedId }) => {
               );
             })}
           </div>
-          <hr style={{ width: "94%" }} />
-          <div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
+
+          <hr />
+
+          {previewUrl ? (
+            <div className=" d-flex flex-column bg-primary bg-opacity-10 ">
+              <p className=" p-0 ">Preview:</p>
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className=" m-auto "
+                style={{
+                  maxWidth: "300px",
+                  maxHeight: "300px",
+                }}
+              />
+              <div className=" d-flex flex-row gap-2 justify-content-center mb-5 ">
+                <button
+                  className=" btn btn-outline-dark "
+                  onClick={sendImageToServer}
+                >
+                  Send
+                </button>
+                <button
+                  className=" btn btn-outline-dark "
+                  onClick={cancelPreview}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ):(<div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
             <input
               className="chat-input"
               type="text"
+              onClick={() => {
+                scrollDown();
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
+                if (e.key === "Enter") {
+                  sendMessage();
+                }
               }}
               placeholder="Type a message "
               onChange={(e) => setMessage(e.target.value)}
@@ -348,7 +397,8 @@ export const Chat = ({ friendList=[], selectedId }) => {
                 style={{ width: "30px", height: "25px" }}
               />
             </button>
-          </div>
+          </div>)}
+          
           {!isFriend && (
             <p style={{ color: "red", marginLeft: "30px" }}>
               You can only message your friends.
