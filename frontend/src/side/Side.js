@@ -10,20 +10,17 @@ export const Side = ({ friends = [], onSelectUser }) => {
 
   return (
     <>
-      <div
-        className="bg-white border-end shadow-sm p-4 overflow-auto"
-        style={{ width: "25%" }}
-      >
+      <div className="bg-white border-end p-4 overflow-y-auto side-container">
         {friendsToShow.map((user, i) => (
           <div
-            className="user-container p-2 bg-primary bg-opacity-10 rounded shadow-sm hover-bg-primary"
+            className=" flex flex-column align-items-start px-[10px] rounded-md hover:scale-[1.05] hover:bg-neutral-950 hover:text-neutral-50 active:scale-[0.98] ring shadow-xl ring-gray-300 hover:ring-0 cursor-pointer "
             key={i}
             onClick={(e) => {
               e.preventDefault();
               onSelectUser(user.id);
             }}
           >
-            <p className="fw-semibold text-dark">
+            <p className="fw-semibold text-lg m-0 font-serif">
               {`${user?.firstName || ""} ${user?.lastName || ""}`.trim()}
             </p>
             <p className="small text-secondary">{user.email}</p>

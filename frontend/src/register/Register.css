@@ -20,6 +20,7 @@
 }
 
 .inputText {
+  background-color: white;
   border: 2px solid black;
   border-radius: 5px;
   padding: 10px;
@@ -173,6 +174,14 @@
   text-overflow: ellipsis; /* add ... if text still overflows */
 }
 
+.popup-itm:hover {
+  background-color: #d2e7fc;
+}
+
+.popup-itm:active {
+  background-color: #ffffff;
+}
+
 .popup-btn {
   margin-right: 50px;
   align-self: center;
@@ -248,10 +257,8 @@
 
 
 .add-friend {
-  font-weight: bolder;
   background-color: transparent;
   color: white;
-  font-size: 16px;
   border: none;
 }
 

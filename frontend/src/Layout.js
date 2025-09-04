@@ -15,13 +15,6 @@ export const Layout = () => {
     setFriendsList(newFriends);
   };
 
-  // useEffect(() => {
-  //   if (location.state?.showLoginToast) {
-  //     toast.success(location.state.showLoginToast);
-  //     navigate(location.pathname, { replace: true });
-  //   }
-  // }, [location, navigate]);
-
   return (
     <div
       style={{

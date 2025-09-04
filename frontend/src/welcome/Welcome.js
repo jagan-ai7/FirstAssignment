@@ -5,16 +5,17 @@ import Popup from "reactjs-popup";
 import { socket } from "../socket";
 // import { UserContext } from "../UserContext";
 import { toast } from "react-toastify";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  increment,
-  decrement,
-  incrementByAmount,
-} from "../redux/slice/counterSlice";
+// import { useSelector, useDispatch } from "react-redux";
+// import {
+//   increment,
+//   decrement,
+//   incrementByAmount,
+// } from "../redux/slice/counterSlice";
 import { useNavigate } from "react-router-dom";
 import { UsersContext } from "../contexts/UsersContext";
 import { AuthContext } from "../contexts/AuthContext";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
+import { Button, Dropdown, Modal } from "react-bootstrap";
 
 export const Welcome = ({ updateFriendsList, onSelectUser }) => {
   // const { users, token, user, setToken } = useContext(UserContext);
@@ -26,8 +27,9 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
-  const count = useSelector((state) => state.counter.value);
-  const dispatch = useDispatch();
+  const [showLogout, setShowLogout] = useState(false);
+  // const count = useSelector((state) => state.counter.value);
+  // const dispatch = useDispatch();
 
   const navigate = useNavigate();
 
@@ -192,14 +194,17 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
   const Logout = () => {
     localStorage.clear();
     setToken("");
-    navigate("/login");
+    navigate("/");
   };
+
+  const handleShowLogout = () => setShowLogout(true);
+  const handleCloseLogout = () => setShowLogout(false);
 
   return (
     <>
       {/* HEADER */}
       <div className="navbar navbar-dark bg-dark px-4 d-flex justify-content-between align-items-center">
-        <h2 className="navbar-brand">{userName}</h2>
+        <h2 className="navbar-brand fs-3 font-serif">{userName}</h2>
 
         <div className="ms-auto me-5 my-auto">
           <button
@@ -210,42 +215,61 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
           </button>
         </div>
 
-        <Popup
-          trigger={
-            <button className="btn btn-outline-light btn-sm popup-btn">
-              Menu
-            </button>
-          }
-          contentStyle={{
-            borderRadius: "5px",
-            width: "180px",
-            display: "flex",
-            flexDirection: "column",
-            border: "none",
-            overflow: "hidden",
-          }}
-          overlayStyle={{ background: "rgba(0,0,0,0.4)" }}
-        >
-          <span
-            className="popup-itm"
-            onClick={(e) => {
-              e.preventDefault();
-              ChangePassword();
-            }}
+        <Dropdown>
+          <Dropdown.Toggle
+            variant="dark"
+            className="btn btn-outline-light btn-sm popup-btn"
           >
-            Change Password
-          </span>
-          <span
-            className="popup-itm"
-            onClick={(e) => {
-              e.preventDefault();
-              Logout();
-            }}
-          >
-            Logout
-          </span>
-        </Popup>
+            Menu
+          </Dropdown.Toggle>
+
+          <Dropdown.Menu variant="dark" className="">
+            <Dropdown.Item as="button">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  ChangePassword();
+                }}
+              >
+                Change Password
+              </button>
+            </Dropdown.Item>
+            <Dropdown.Item as="button">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleShowLogout();
+                }}
+              >
+                Logout
+              </button>
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
       </div>
+
+      <Modal centered show={showLogout} onHide={handleCloseLogout}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Logout</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to logout?</Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="light"
+            className="btn btn-outline-dark btn-sm me-2 w-[50px] h-[40px] add-friend"
+            onClick={handleCloseLogout}
+          >
+            No
+          </Button>
+          <Button
+            variant="dark"
+            className="btn btn-outline-light btn-sm me-2 w-[50px] h-[40px] add-friend"
+            onClick={Logout}
+          >
+            Yes
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Sidebar */}
       <div
@@ -279,14 +303,11 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
                   key={u.id}
                   class="d-flex justify-content-between align-items-center border-bottom p-2 mt-2"
                 >
-                  <p className="fw-bold m-0">{`${u.firstName} ${u.lastName}`}</p>
+                  <p className="fw-bold m-0 font-serif">{`${u.firstName} ${u.lastName}`}</p>
                   {isFriend ? (
                     // <span style={{ color: "green" }}>Friend</span>
                     <button
-                      class="btn rounded border-0 border px-2 py-1 text-white message-btn"
-                      style={{
-                        backgroundColor: "#0158bb",
-                      }}
+                      class="btn btn-outline-dark btn-sm add-friend px-2 py-1"
                       onClick={(e) => {
                         e.preventDefault();
                         onSelectUser(u.id);
@@ -324,10 +345,7 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
                     </button>
                   ) : (
                     <button
-                      class="btn rounded border-0 border px-2 py-1 text-white message-btn"
-                      style={{
-                        backgroundColor: "#0158bb",
-                      }}
+                      class="btn btn-outline-dark btn-sm add-friend px-2 py-1"
                       onClick={() => addFriend(u.id)}
                     >
                       Add
@@ -337,10 +355,10 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
               );
             })}
         </div>
-        <h1>Count: {count}</h1>
+        {/* <h1>Count: {count}</h1>
         <button onClick={() => dispatch(increment())}>+</button>
         <button onClick={() => dispatch(decrement())}>-</button>
-        <button onClick={() => dispatch(incrementByAmount(5))}>+5</button>
+        <button onClick={() => dispatch(incrementByAmount(5))}>+5</button> */}
       </div>
 
       {isSidebarOpen && (

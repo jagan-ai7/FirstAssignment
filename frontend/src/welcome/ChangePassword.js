@@ -50,7 +50,8 @@ export const ChangePassword = () => {
           }
         );
         localStorage.removeItem("token");
-        navigate("/login", { state: { toast2: response.data.message } });
+        navigate("/");
+        toast.success("Login Successfully");
       } catch (error) {
         toast.error(error.response.data.error);
       } finally {

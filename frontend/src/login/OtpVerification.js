@@ -38,7 +38,8 @@ export const OtpVerification = () => {
         if (error.response) {
           toast.error(`Login failed : ${error.response.data.error}`);
           localStorage.removeItem("token");
-          // navigate('/login')
+          // navigate('/')
+          // toast.error('Invalid Otp');
         } else {
           console.error("Unexpected error:", error.message);
         }
@@ -49,7 +50,7 @@ export const OtpVerification = () => {
   return (
     <>
       <div style={{ display: "flex" }}>
-        <button className="back_login" onClick={(e) => navigate("/login")}>
+        <button className="back_login" onClick={(e) => navigate("/")}>
           Back To Login
         </button>
       </div>

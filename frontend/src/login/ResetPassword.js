@@ -50,7 +50,8 @@ export const ResetPassword = () => {
           `http://localhost:5000/users/reset-password/${id}/${token}`,
           values
         );
-        navigate("/login", { state: { toast: res.data.message } });
+        navigate("/");
+        toast.success("Password reset successfull");
         console.log("ResetData---------", res);
       } catch (error) {
         if (error.response) {

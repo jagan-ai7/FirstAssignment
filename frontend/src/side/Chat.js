@@ -268,12 +268,11 @@ export const Chat = ({ friendList = [], selectedId }) => {
 
       {selectedId ? (
         <>
-          <div className="d-flex justify-content-between align-items-center bg-light text-dark px-4 py-2">
-            <h2 className="h5 fw-semibold mb-0 ms-3">{name}</h2>
+          <div className="d-flex bg-light text-dark px-4 py-3 border-bottom">
+            <h4 className="fw-semibold ms-3">{name}</h4>
           </div>
-          <hr />
           <div
-            className="flex-grow-1 overflow-auto p-4 bg-white chat-container"
+            className="flex-grow-1 overflow-y-auto p-4 bg-white chat-container"
             id="chat-container"
           >
             {chatMessages.map((msg, i) => {
@@ -324,8 +323,17 @@ export const Chat = ({ friendList = [], selectedId }) => {
           <hr />
 
           {previewUrl ? (
-            <div className=" d-flex flex-column bg-primary bg-opacity-10 ">
-              <p className=" p-0 ">Preview:</p>
+            <div
+              className=" d-flex flex-column bg-primary bg-opacity-10 ms-auto rounded me-2 border "
+              style={{ width: "400px" }}
+            >
+              <button
+                className="cross-btn ms-auto m-2"
+                style={{ width: "40px", height: "40px" }}
+                onClick={cancelPreview}
+              >
+                ✖
+              </button>
               <img
                 src={previewUrl}
                 alt="Preview"
@@ -335,70 +343,72 @@ export const Chat = ({ friendList = [], selectedId }) => {
                   maxHeight: "300px",
                 }}
               />
-              <div className=" d-flex flex-row gap-2 justify-content-center mb-5 ">
+
+              <div className=" bg-white border">
                 <button
-                  className=" btn btn-outline-dark "
+                  className="chat-btn m-2"
+                  style={{ width: "40px", height: "40px" }}
                   onClick={sendImageToServer}
                 >
-                  Send
-                </button>
-                <button
-                  className=" btn btn-outline-dark "
-                  onClick={cancelPreview}
-                >
-                  Cancel
+                  <img
+                    src="/images/send-button1.png"
+                    alt="Send"
+                    style={{ width: "35px", height: "30px" }}
+                  />
                 </button>
               </div>
             </div>
-          ):(<div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
-            <input
-              className="chat-input"
-              type="text"
-              onClick={() => {
-                scrollDown();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  sendMessage();
-                }
-              }}
-              placeholder="Type a message "
-              onChange={(e) => setMessage(e.target.value)}
-              value={message}
-              disabled={!isFriend}
-            />
-            {/* ===== New button to send image ===== */}
-            <button
-              className="image-btn"
-              onClick={(e) => {
-                e.preventDefault();
-                sendImage();
-              }}
-              disabled={!isFriend}
-            >
-              <img
-                src="/images/pictureSend.png"
-                alt="ImgSend"
-                style={{ width: "35px", height: "30px" }}
+          ) : (
+            <div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
+              <input
+                className="chat-input"
+                type="text"
+                onClick={() => {
+                  scrollDown();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    sendMessage();
+                  }
+                }}
+                placeholder="Type a message "
+                onChange={(e) => setMessage(e.target.value)}
+                value={message}
+                disabled={!isFriend}
               />
-            </button>
+              {/* ===== New button to send image ===== */}
+              <button
+                className="image-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  sendImage();
+                }}
+                disabled={!isFriend}
+              >
+                <img
+                  src="/images/pictureSend.png"
+                  alt="ImgSend"
+                  style={{ width: "40px", height: "35px" }}
+                />
+              </button>
 
-            <button
-              className="chat-btn"
-              onClick={(e) => {
-                e.preventDefault();
-                sendMessage();
-              }}
-              disabled={!isFriend}
-            >
-              <img
-                src="/images/send-button1.png"
-                alt="Send"
-                style={{ width: "30px", height: "25px" }}
-              />
-            </button>
-          </div>)}
-          
+              <button
+                className="chat-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  sendMessage();
+                }}
+                disabled={!isFriend}
+              >
+                <img
+                  src="/images/send-button1.png"
+                  alt="Send"
+                  style={{ width: "35px", height: "30px" }}
+                />
+              </button>
+            </div>
+          )}
+
           {!isFriend && (
             <p style={{ color: "red", marginLeft: "30px" }}>
               You can only message your friends.

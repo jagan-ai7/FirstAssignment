@@ -62,7 +62,6 @@ export const Login = () => {
         console.log("User-----------", response);
         setToken(token);
         navigate("/layout");
-        // , { state: { showLoginToast: "Login Successful" } }
         toast.success("Login Successfull")
 
         //------------------------------with otp---------------------------------

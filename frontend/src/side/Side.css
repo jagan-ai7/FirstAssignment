@@ -2,9 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 25%;
+  width: 20%;
   padding: 10px;
-  border: none;
   background-color: #cddcea;
   overflow-y: auto;
 }
@@ -31,41 +30,4 @@
 /* Thumb hover effect */
 .side-container::-webkit-scrollbar-thumb:hover {
   background-color: #555;
-}
-
-
-.user-container {
-  display: flex;
-  flex-direction: column;
-  height: 80px;
-  border: 1px solid black;
-  border-radius: 5px;
-  align-items: flex-start;
-  margin-top: 10px;
-  background-color: #ffffff;
-  box-shadow: 1px 2px 3px black;
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-container:hover {
-  border-color: #4a90e2;
-}
-
-.user-container:active {
-  transform: scale(0.98);
-}
-
-.user-name {
-  font-family: "Times New Roman", Times, serif;
-  font-weight: bold;
-  margin: 5px;
-  font-size: 20px;
-  overflow: hidden;
-}
-
-.user-email {
-  margin: 5px;
-  font-size: 15px;
 }

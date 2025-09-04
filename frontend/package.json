@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
+    "@tailwindcss/cli": "^4.1.12",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -12,7 +13,6 @@
     "bootstrap": "^5.3.8",
     "formik": "^2.4.6",
     "jwt-decode": "^4.0.0",
-    "multiselect-react-dropdown": "^2.0.25",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.0",
@@ -48,5 +48,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.1.12"
   }
 }

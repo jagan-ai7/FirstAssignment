@@ -48,7 +48,7 @@ export const Register = () => {
         );
         console.log("response--", response.data.data);
         if (response?.status === 201) {
-          navigate("/login");
+          navigate("/");
           toast.success("Register Successfully");
         }
       } catch (error) {
@@ -188,7 +188,7 @@ export const Register = () => {
         >
           Register
         </button>
-        <Link className="linkfp" to={"/login"}>
+        <Link className="linkfp" to={"/"}>
           Login
         </Link>
       </form>
