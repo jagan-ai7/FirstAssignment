@@ -62,7 +62,7 @@ export const Login = () => {
         console.log("User-----------", response);
         setToken(token);
         navigate("/layout");
-        toast.success("Login Successfull")
+        toast.success("Login Successfull");
 
         //------------------------------with otp---------------------------------
         // navigate('/verification')
@@ -85,11 +85,7 @@ export const Login = () => {
 
   return (
     <div className="main">
-      <img
-        style={{ position: "fixed", zIndex: "-1" }}
-        src="/images/image1.jpg"
-        alt="image"
-      />
+      <img className=" fixed z-[-1] " src="/images/image1.jpg" alt="image" />
       <form className="loginForm_container">
         <h2 className="legendText">Login</h2>
         <label className="labelText" htmlFor="emailText">
@@ -142,7 +138,7 @@ export const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         )}
-        <div style={{display: 'flex', justifyContent: 'space-evenly'}}>
+        <div style={{ display: "flex", justifyContent: "space-evenly" }}>
           <Link className="linkfp" to={"/register"}>
             Signup
           </Link>

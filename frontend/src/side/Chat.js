@@ -262,14 +262,14 @@ export const Chat = ({ friendList = [], selectedId }) => {
         type="file"
         id="image-upload"
         accept="image/*"
-        style={{ display: "none" }}
+        className=" d-none "
         onChange={handleFileUpload}
       />
 
       {selectedId ? (
         <>
           <div className="d-flex bg-light text-dark px-4 py-3 border-bottom">
-            <h4 className="fw-semibold ms-3">{name}</h4>
+            <h4 className="fw-semibold ms-3 font-serif">{name}</h4>
           </div>
           <div
             className="flex-grow-1 overflow-y-auto p-4 bg-white chat-container"
@@ -280,34 +280,23 @@ export const Chat = ({ friendList = [], selectedId }) => {
               return (
                 <div
                   key={i}
-                  className="px-3 py-2 d-flex"
-                  style={{
-                    justifyContent: isSender ? "flex-end" : "flex-start",
-                  }}
+                  className={` px-3 py-2 flex ${
+                    isSender ? "justify-end" : "justify-start"
+                  }`}
                 >
                   <div
-                    style={{
-                      backgroundColor: isSender ? "#0069e5" : "#808080",
-                      color: isSender ? "#FFFFFF" : "#FFFFFF",
-                      padding: "8px 12px",
-                      borderRadius: isSender
-                        ? "15px 0 15px 15px"
-                        : "0 15px 15px 15px",
-                      maxWidth: "70%",
-                      wordWrap: "break-word",
-                      display: "inline-block",
-                      textAlign: isSender ? "right" : "left",
-                      boxSizing: "border-box",
-                      whiteSpace: "pre-wrap",
-                      margin: "8px 0",
-                    }}
+                    className={`text-white px-3 py-2 max-w-[70%] inline-block whitespace-pre-wrap break-words box-border my-2 ${
+                      isSender
+                        ? "bg-[#0069e5] text-right rounded-[15px_0_15px_15px]"
+                        : "bg-[#808080] text-left rounded-[0_15px_15px_15px]"
+                    }`}
                   >
                     {/* ===== Modified here to show image if type==="image" ===== */}
                     {msg.type === "image" ? (
                       <img
                         src={`http://localhost:5000${msg.message}`}
                         alt="Sent"
-                        style={{ maxWidth: "150px", borderRadius: "10px" }}
+                        className=" w-max-[150px], rounded-[10px]"
                         onLoad={scrollDown}
                       />
                     ) : (
@@ -323,13 +312,9 @@ export const Chat = ({ friendList = [], selectedId }) => {
           <hr />
 
           {previewUrl ? (
-            <div
-              className=" d-flex flex-column bg-primary bg-opacity-10 ms-auto rounded me-2 border "
-              style={{ width: "400px" }}
-            >
+            <div className=" d-flex flex-column bg-primary bg-opacity-10 ms-auto rounded me-2 border w-[400px] ">
               <button
-                className="cross-btn ms-auto m-2"
-                style={{ width: "40px", height: "40px" }}
+                className="cross-btn ms-auto m-2 w-[40px] h-[40px]"
                 onClick={cancelPreview}
               >
                 ✖
@@ -337,29 +322,24 @@ export const Chat = ({ friendList = [], selectedId }) => {
               <img
                 src={previewUrl}
                 alt="Preview"
-                className=" m-auto "
-                style={{
-                  maxWidth: "300px",
-                  maxHeight: "300px",
-                }}
+                className=" m-auto w-max-[300px] h-max-[300px] "
               />
 
               <div className=" bg-white border">
                 <button
-                  className="chat-btn m-2"
-                  style={{ width: "40px", height: "40px" }}
+                  className="chat-btn m-2 w-[40px] h-[40px] "
                   onClick={sendImageToServer}
                 >
                   <img
                     src="/images/send-button1.png"
                     alt="Send"
-                    style={{ width: "35px", height: "30px" }}
+                    className=" w-[35px] h-[30px] "
                   />
                 </button>
               </div>
             </div>
           ) : (
-            <div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
+            <div className=" flex gap-1 mb-3 ">
               <input
                 className="chat-input"
                 type="text"
@@ -388,7 +368,7 @@ export const Chat = ({ friendList = [], selectedId }) => {
                 <img
                   src="/images/pictureSend.png"
                   alt="ImgSend"
-                  style={{ width: "40px", height: "35px" }}
+                  className=" w-[40px] h-[35px]"
                 />
               </button>
 
@@ -403,20 +383,20 @@ export const Chat = ({ friendList = [], selectedId }) => {
                 <img
                   src="/images/send-button1.png"
                   alt="Send"
-                  style={{ width: "35px", height: "30px" }}
+                  className=" w-[35px] h-[30px]"
                 />
               </button>
             </div>
           )}
 
           {!isFriend && (
-            <p style={{ color: "red", marginLeft: "30px" }}>
+            <p className=" text-red-500 ms-[30px]">
               You can only message your friends.
             </p>
           )}
         </>
       ) : (
-        <div style={{ margin: "auto" }}>Select a user to start chatting</div>
+        <div className=" m-auto ">Select a user to start chatting</div>
       )}
     </div>
   );

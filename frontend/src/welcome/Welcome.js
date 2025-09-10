@@ -273,14 +273,8 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
 
       {/* Sidebar */}
       <div
-        class="position-fixed top-0 end-0 vh-100 bg-white shadow p-3"
-        style={{
-          width: "380px",
-          boxShadow: "-2px 0 5px rgba(0, 0, 0, 0.3)",
-          transition: "transform 0.3s ease-in-out",
-          transform: isSidebarOpen ? "translateX(0%)" : "translateX(100%)",
-          zIndex: "1000",
-        }}
+        className={` position-fixed top-0 end-0 vh-100 bg-white p-3 w-[380px] shadow-[ -2px_0_5px_rgba(0,0,0,0.3) ] transition-transform duration-300 ease-in-out z-[1000] 
+    ${isSidebarOpen ? "translate-x-0" : "translate-x-full"} `}
       >
         <button
           onClick={() => setIsSidebarOpen(false)}
@@ -325,22 +319,22 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
                         <img
                           src="/images/check-mark.png"
                           alt="ImgSend"
-                          style={{ width: "20px", height: "20px" }}
+                          className=" w-[20px] h-[20px] "
                         />
                       </button>
                       <button
-                        class="p-0 border-0 accept-deny"
+                        className="p-0 border-0 accept-deny"
                         onClick={() => denyRequest(u.id)}
                       >
                         <img
                           src="/images/cross.png"
                           alt="ImgSend"
-                          style={{ width: "17px", height: "17px" }}
+                          className=" w-[17px] h-[17px] "
                         />
                       </button>
                     </div>
                   ) : isSent ? (
-                    <button disabled style={{ opacity: 0.6 }}>
+                    <button disabled className=" opacity-[0.6] ">
                       Requested
                     </button>
                   ) : (
@@ -364,8 +358,8 @@ export const Welcome = ({ updateFriendsList, onSelectUser }) => {
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          className="position-fixed top-0 start-0 w-100 h-100"
-          style={{ backgroundColor: "rgba(0,0,0,0.3)", zIndex: "999" }}
+          className="position-fixed top-0 start-0 w-100 h-100 bg-[rgba(0,0,0,0.3)] z-[999] "
+
         />
       )}
     </>

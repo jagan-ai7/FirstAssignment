@@ -75,11 +75,7 @@ export const Register = () => {
 
   return (
     <div className="main">
-      <img
-        style={{ position: "fixed", zIndex: "-1" }}
-        src="/images/image.jpg"
-        alt="image"
-      />
+      <img className=" fixed z-[-1] " src="/images/image.jpg" alt="image" />
       <form className="form_container">
         <h2 className="legendText">Register</h2>
         <div
